@@ -189,13 +189,13 @@ class App {
 
 	private onWindowResize(e:any) {
 		clearTimeout(this.resizeTimer);
-		this.resizeTimer = setTimeout(function(){
+		this.resizeTimer = setTimeout( () => {
 			this.centerContainers();
 		}, 100);
 	}
 
 	//  Keyboard managment
-	private initKeyboardKeys = function() {
+	private initKeyboardKeys() {
 		$(document).bind('keydown', this.onKeyDown);
 		$(document).bind('keyup', this.onKeyUp);
 	}
@@ -286,7 +286,7 @@ class App {
 		zIndex = ( player == 'player' ) ? card.index() : 50-card.index();
 		card.css('z-index', zIndex);
 
-		setTimeout(function(){
+		setTimeout(() => {
 			card.css({
 				'top'     : '0%',
 				'left'    : 10 * card.index() + '%'
@@ -294,7 +294,7 @@ class App {
 			this.rotateCards(container, (player == 'player'));
 
 
-			setTimeout(function(){
+			setTimeout(() => {
 				this.centerContainer(container);
 				if ( player == 'player' ) this.addToPlayerTotal(cardData.value);
 				else                      this.addToDealerTotal(cardData.value);
@@ -311,7 +311,7 @@ class App {
         increment = ( isPlayer ) ? -1 : 1,
         pattern   = ( this.PATTERNS[numCards] ) ? this.PATTERNS[numCards] : this.PATTERNS[this.PATTERNS.length-1];
 
-		cards.each(function(i){
+		cards.each( (i) => {
 			var deg     = ( i < pattern.length ) ? pattern[i].deg : pattern[pattern.length-1].deg,
             offset  = ( i < pattern.length ) ? pattern[i].top : pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
 
@@ -415,7 +415,7 @@ class App {
 		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.gameEnded ) return;
 
 		this.doubleBtn.addClass('desactivate');
-		this.addCard('front', 'player', function(){
+		this.addCard('front', 'player', () => {
 			if ( this.playerCards.sum() > 21 ) this.lose('lose-busted');
 		});
 	}
@@ -427,7 +427,7 @@ class App {
 		this.isStanding = true;
 		this.revealDealerCard();
 
-		setTimeout(function(){
+		setTimeout( () => {
 			if ( this.dealerCards.sum() < 17 ) this.dealerTurn();
 			else this.end();
 		}, this.ANIM_DELAY);
@@ -435,8 +435,8 @@ class App {
 
 	private dealerTurn()
 	{
-		this.addCard('front', 'dealer', function(){
-			this.dealerTotal.html(this.calculateDealerScore());
+		this.addCard('front', 'dealer', () => {
+			this.dealerTotal.html(String(this.calculateDealerScore()));
 
 			if ( this.dealerCards.sum() < 17 ) this.dealerTurn();
 			else this.end();
@@ -449,7 +449,7 @@ class App {
 
 		this.changeBankroll(-1);
 		this.doubled = true;
-		this.addCard('front', 'player', function(){
+		this.addCard('front', 'player', () => {
 			if ( this.playerCards.sum() > 21 ) this.lose('lose-busted');
 			else this.stand();
 		});
@@ -556,10 +556,10 @@ class App {
 	{
 		this.canDoAction = false;
 
-		this.addCard('front', 'player', function(){
-			this.addCard('front', 'dealer', function(){
-				this.addCard('front', 'player', function(){
-					this.addCard('back', 'dealer', function(){
+		this.addCard('front', 'player', () => {
+			this.addCard('front', 'dealer', () => {
+				this.addCard('front', 'player', () => {
+					this.addCard('back', 'dealer', () => {
 						this.checkBlackjack();
 					});
 				});
