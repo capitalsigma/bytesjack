@@ -5,6 +5,23 @@
 /// <reference path='../libs/jquery.d.ts'/>
 
 
+// Globals
+var ANIM_DELAY = 300;
+var PATTERNS = [
+        [{deg: 0, top: 0}],
+        [{deg: 5, top: 0}, {deg: -5, top: 0}],
+        [{deg: 5, top: 15}, {deg: -1, top: 0}, {deg: -5, top: 15}],
+        [{deg: 9, top: 20}, {deg: 4, top: 0}, {deg: -4, top: 0},
+		 {deg: -9, top: 15}],
+        [{deg: 12, top: 50}, {deg: 8, top: 10}, {deg: -4, top: 0},
+		 {deg: -12, top: 15}, {deg: -16, top: 40}],
+        [{deg: 14, top: 40}, {deg: 8, top: 10}, {deg: -2, top: 5},
+		 {deg: -5, top: 15}, {deg: -8, top: 40}, {deg: -14, top: 70}],
+        [{deg: 14, top: 70}, {deg: 8, top: 30}, {deg: 4, top: 10},
+		 {deg: 0, top: 5}, {deg: -4, top: 20}, {deg: -8, top: 40},
+		 {deg: -16, top: 70}]
+    ];
+
 
 /*
  * Array shuffle <http://snipplr.com/view/535>
@@ -83,14 +100,292 @@ class Hand extends CardCollection {
 	}
 }
 
-Array.prototype.shuffle = function() {
-	for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i)){
-		x = this[--i];
-		this[i] = this[j];
-		this[j] = x;
+
+interface CardValue {
+	card:number;
+	value:number;
+	type:string;
+}
+
+class AbstractDeck {
+	types = ['clubs', 'diamonds', 'hearts', 'spades'];
+	cards: CardValue[];
+	currentIndex:number;
+
+
+	constructor() {
+		this.cards = [];
+		this.currentIndex = 0;
 	}
-	return this;
-};
+
+	shuffle():void {
+		for(var j, x, i = this.cards.length; i; j = Math.floor(Math.random() * i)){
+			x = this.cards[--i];
+			this.cards[i] = this.cards[j];
+			this.cards[j] = x;
+		}
+	}
+
+	getCurrent() {
+		return this.cards[this.currentIndex];
+	}
+}
+
+class RealisticDeck extends AbstractDeck {
+	constructor() {
+		super();
+
+		for (var i = 0; i < this.types.length; i++) {
+			for (var j = 1; j <= 13; j++) {
+				var value = (j > 10) ? 10 : j;
+				this.cards.push({
+					card: j,
+					value: value,
+					type: this.types[i]
+				});
+			};
+		}
+
+		this.cards.shuffle();
+	}
+}
+
+class Card {
+	public container:JQuery;
+
+	constructor(private id, private type, public value, private side) {
+		if (side === 'back') {
+			this.container = $('<div data-id="'+id+'" class="card back"></div>');
+		} else {
+			var cardValue =
+				( value == 1 ) ? 'A' :
+				( value == 11 ) ? 'J' :
+				( value == 12 ) ? 'Q' :
+				( value == 13 ) ? 'K' :
+				value,
+            cardIcon  =
+				( type == 'hearts' ) ? '♥' :
+				( type == 'diamonds' ) ? '♦' :
+				( type == 'spades' ) ? '♠' :
+				'♣',
+            corner = '<div><span>'+cardValue+'</span><span>'+cardIcon+'</span></div>',
+            icons = '';
+
+			if ( value <= 10 ) {
+				for ( var i=1, l=value; i <= l; i++ ) {
+					icons += '<span>'+cardIcon+'</span>';
+				}
+			} else {
+				icons =
+					( value == 11 ) ? '<span>♝</span>' :
+					( value == 12 ) ? '<span>♛</span>' :
+					( value == 13 ) ? '<span>♚</span>' : '';
+			}
+			this.container =
+				$('<div data-id="'+id+'" class="card value'+cardValue+
+				  ' '+type+'">'+corner+'<div class="icons">'+icons+
+				  '</div>'+corner+'</div>');
+		}
+	}
+
+	setCss(toSet) {
+		this.container.css(toSet)
+	}
+
+	getFlipped() {
+		var newSide = '';
+		if (this.side === 'back') {
+			newSide = 'front';
+		} else if(this.side === 'front') {
+			newSide = 'back';
+		} else {
+			throw new Error("No such card side");
+		}
+
+		return new Card(this.id, this.type, this.value, newSide);
+	}
+
+	index() {
+		return this.container.index();
+	}
+}
+
+
+class AbstractPlayer {
+	private hand:Hand;
+	isDealer:boolean = undefined;
+	// private cardsContainer:JQuery;
+	// private totalContainer:JQuery;
+
+	// typescript doesn't have protected variables
+	constructor(public cardsContainer:JQuery,
+				public totalContainer:JQuery,
+				public isSafari:boolean){
+		this.hand = new Hand();
+	}
+
+	getScore() {
+		return this.hand.sum();
+	}
+
+	displayScore() {
+		this.totalContainer.html(String(this.getScore()));
+	}
+
+	resetHand() {
+		this.hand = new Hand();
+		this.totalContainer.html('');
+		this.cardsContainer.html('');
+	}
+
+	updateTotal(newTotal:number) {
+		this.totalContainer.html(String(newTotal));
+	}
+
+	// addCard(side, callback) {
+
+	addCard(card:Card, callback){
+		// var cardData  = this.cards[this.cardsIndex],
+        // container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
+        // card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
+		var zIndex    = 0;
+
+		this.hand.push(card.value);
+		// this.cardsIndex++;
+		// this.canDoAction = false;
+
+		card.setCss({
+			'top'   : '-150%',
+			'left'  : '100%'
+		});
+
+		this.cardsContainer.append(card.container);
+		if (this.isDealer === true) {
+			zIndex = card.index();
+		} else if (this.isDealer === false) {
+			zIndex = 50 - card.index();
+		} else {
+			throw new Error("AbstractPlayer should never get cards");
+		}
+		// zIndex = this.isDealer ? card.index() : 50-card.index();
+		card.setCss({'z-index': String(zIndex)});
+
+		setTimeout(() => {
+			card.setCss({
+				'top'     : '0%',
+				'left'    : 10 * card.index() + '%'
+			});
+			this.rotateCards();
+
+
+			setTimeout(() => {
+				this.centerContainer();
+				// if ( player == 'player' ) this.addToPlayerTotal(cardData.value);
+				// else                      this.addToDealerTotal(cardData.value);
+
+				// this.canDoAction = true;
+				if ( callback != undefined ) callback.call();
+			}, ANIM_DELAY + 100);
+		}, 10);
+	}
+
+
+	centerContainer(){
+		var lastCard    = this.cardsContainer.children('.card:last-child'),
+        totalWidth  = 0;
+
+		if ( lastCard.length == 0 ) return;
+
+		totalWidth = lastCard.position().left + lastCard.width();
+		// if ( this.html.attr('browser') == 'Safari' )
+		if (this.isSafari) {
+			this.cardsContainer.css('-webkit-transform',
+									'translate3d('+ -totalWidth / 2 +'px,0,0)');
+		} else {
+			this.cardsContainer.css('margin-left', -totalWidth / 2 + 'px');
+		}
+	}
+
+
+	private rotateCards(){
+		var cards = this.cardsContainer.children('.card'),
+        numCards  = this.cardsContainer.length - 1,
+        increment = ( this.isDealer ) ? 1 : -1,
+        pattern   = ( PATTERNS[numCards] ) ?
+			PATTERNS[numCards] :
+			PATTERNS[PATTERNS.length-1];
+
+		cards.each((i) => {
+			var deg     = ( i < pattern.length ) ?
+				pattern[i].deg :
+				pattern[pattern.length-1].deg,
+            offset  = ( i < pattern.length ) ?
+				pattern[i].top :
+				pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
+
+			$(this).css({
+				'-webkit-transform' : 'rotate('+ deg * increment +'deg)',
+				'-khtml-transform' : 'rotate('+ deg * increment +'deg)',
+				'-moz-transform' : 'rotate('+ deg * increment +'deg)',
+				'-ms-transform' : 'rotate('+ deg * increment +'deg)',
+				'transform' : 'rotate('+ deg * increment +'deg)',
+				'top' : offset * -increment + 'px'
+			});
+		});
+	}
+
+}
+
+class Dealer extends AbstractPlayer {
+	isDealer:boolean = true;
+	// constructor(cardsContainer:JQuery,
+	// 			totalContainer:JQuery,
+	// 			isSafari:boolean){
+	// 	super(cardsContainer, totalContainer, isSafari);
+	// 	this.isDealer = true;
+	// }
+
+	doTurn() {
+
+	}
+
+}
+
+class Player extends AbstractPlayer {
+	isDealer = false;
+	bankValue = 100;
+	defaultBetSize = 5;
+
+	constructor(public cardsContainer:JQuery,
+				public totalContainer:JQuery,
+				public isSafari:boolean,
+				private bankContainer,
+				private bankValue=100) {
+		super();
+	}
+
+	changeBankroll(betMultiplier) {
+		this.bankValue += betMultiplier * this.defaultBetSize;
+		this.bankContainer.html(String(this.bankValue));
+	}
+
+
+	addCard(card:Card, callback) {
+		super.addCard(card, callback);
+		this.displayScore();
+	}
+
+}
+
+
+// Array.prototype.shuffle = function() {
+// 	for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i)){
+// 		x = this[--i];
+// 		this[i] = this[j];
+// 		this[j] = x;
+// 	}
+// 	return this;
+// };
 
 // Array.prototype.sum = function() {
 // 	for(var s = 0, i = this.length; i; s += this[--i]){};
@@ -129,25 +424,27 @@ class App {
 
 	//  Variables
 	types = ['clubs', 'diamonds', 'hearts', 'spades'];
-	cards           = [];
-	cardsIndex      = 0;
+	// cards           = [];
+	deckConstructor = () => { return new RealisticDeck() };
+	deck = this.deckConstructor();
+	// cardsIndex      = 0;
 	isPlaying       = false;
 	gameDealed      = false;
 	dealNav         = $('#deal');
 	actionsNav      = $('#actions');
 	doubleBtn       = $('#double');
-	pCardsContainer = $('#player-cards');
-	dCardsContainer = $('#dealer-cards');
-	playerTotal     = $('#player-total');
-	playerCards     = new Hand();
-	playerAces      = 0;
-	dealerTotal     = $('#dealer-total');
-	dealerCards     = new Hand();
-	dealerAces      = 0;
+	// pCardsContainer = $('#player-cards');
+	// dCardsContainer = $('#dealer-cards');
+	// playerTotal     = $('#player-total');
+	// playerCards     = new Hand();
+	// playerAces      = 0;
+	// dealerTotal     = $('#dealer-total');
+	// dealerCards     = new Hand();
+	// dealerAces      = 0;
 	chips           = $('#chips');
 	allChips        = $('.chip');
-	bank            = 100;
-	bankroll        = $('#this.bankroll');
+	// bank            = 100;
+	// bankroll        = $('#this.bankroll');
 	doubled         = false;
 	currentBet      = this.allChips.first().data('value');
 	resizeTimer     = null;
@@ -155,6 +452,10 @@ class App {
 	isStanding      = false;
 	gameEnded       = false;
 	html            = $('html');
+	isSafari = this.html.attr('browser') === 'Safari';
+	dealer = new Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
+	player = new Player($('#player-cards'), $('#player-total'), this.isSafari,
+						$('#this.bankroll'));
 
 	constructor () {
 		this.initialize.apply(this, arguments);
@@ -257,128 +558,34 @@ class App {
 	}
 
 	//  Cards management
-	private initDeck(){
-		for ( var i = 0; i < this.types.length; i++ ) {
-			for ( var j = 1; j <= 13; j++ ) {
-				var value = ( j > 10 ) ? 10 : j;
-				this.cards.push({ card:j, value: value, type: this.types[i] });
-			};
-		}
+	// private initDeck(){
+	// 	for ( var i = 0; i < this.types.length; i++ ) {
+	// 		for ( var j = 1; j <= 13; j++ ) {
+	// 			var value = ( j > 10 ) ? 10 : j;
+	// 			this.cards.push({ card:j, value: value, type: this.types[i] });
+	// 		};
+	// 	}
 
-		this.cards.shuffle();
-	}
+	// 	this.cards.shuffle();
+	// }
 
-	private addCard(side, player, callback){
-		var cardData  = this.cards[this.cardsIndex],
-        container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
-        card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
-        zIndex    = 0;
+	private addCard(side, toAdd:AbstractPlayer, callback){
+		// var cardData  = this.cards[this.cardsIndex];
+		var cardData = this.deck.getCurrent();
+		var newCard = new Card(this.cardsIndex, cardData.type, cardData.card, side);
 
-		this.cardsIndex++;
-		this.canDoAction = false;
+		// var toAdd = (player === 'player') ?
+		// 	this.player :
+		// 	this.dealer;
 
-		card.css({
-			'top'   : '-150%',
-			'left'  : '100%'
-		});
-
-		container.append(card);
-		zIndex = ( player == 'player' ) ? card.index() : 50-card.index();
-		card.css('z-index', zIndex);
-
-		setTimeout(() => {
-			card.css({
-				'top'     : '0%',
-				'left'    : 10 * card.index() + '%'
-			});
-			this.rotateCards(container, (player == 'player'));
-
-
-			setTimeout(() => {
-				this.centerContainer(container);
-				if ( player == 'player' ) this.addToPlayerTotal(cardData.value);
-				else                      this.addToDealerTotal(cardData.value);
-
-				this.canDoAction = true;
-				if ( callback != undefined ) callback.call();
-			}, this.ANIM_DELAY + 100);
-		}, 10);
-	}
-
-	private rotateCards(container, isPlayer){
-		var cards     = container.children('.card'),
-        numCards  = cards.size() - 1,
-        increment = ( isPlayer ) ? -1 : 1,
-        pattern   = ( this.PATTERNS[numCards] ) ? this.PATTERNS[numCards] : this.PATTERNS[this.PATTERNS.length-1];
-
-		cards.each( (i) => {
-			var deg     = ( i < pattern.length ) ? pattern[i].deg : pattern[pattern.length-1].deg,
-            offset  = ( i < pattern.length ) ? pattern[i].top : pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
-
-			$(this).css({
-				'-webkit-transform' : 'rotate('+ deg * increment +'deg)',
-				'-khtml-transform' : 'rotate('+ deg * increment +'deg)',
-				'-moz-transform' : 'rotate('+ deg * increment +'deg)',
-				'-ms-transform' : 'rotate('+ deg * increment +'deg)',
-				'transform' : 'rotate('+ deg * increment +'deg)',
-				'top' : offset * -increment + 'px'
-			});
-		});
+		toAdd.addCard(newCard, callback);
 	}
 
 	private centerContainers(){
-		this.centerContainer(this.pCardsContainer);
-		this.centerContainer(this.dCardsContainer);
+		this.dealer.centerContainer();
+		this.player.centerContainer();
 	}
 
-	private centerContainer( container ){
-		var lastCard    = container.children('.card:last-child'),
-        totalWidth  = 0;
-
-		if ( lastCard.size() == 0 ) return;
-
-		totalWidth = lastCard.position().left + lastCard.width();
-		if ( this.html.attr('browser') == 'Safari' )
-			container.css('-webkit-transform', 'translate3d('+ -totalWidth / 2 +'px,0,0)');
-		else
-			container.css('margin-left', -totalWidth / 2 + 'px');
-	}
-
-	private buildCard(id, type, value, side){
-		var card;
-		if ( side == 'back' ) card = $('<div data-id="'+id+'" class="card back"></div>');
-		else {
-			var cardValue =
-				( value == 1 ) ? 'A' :
-				( value == 11 ) ? 'J' :
-				( value == 12 ) ? 'Q' :
-				( value == 13 ) ? 'K' :
-				value,
-            cardIcon  =
-				( type == 'hearts' ) ? '♥' :
-				( type == 'diamonds' ) ? '♦' :
-				( type == 'spades' ) ? '♠' :
-				'♣',
-            corner = '<div><span>'+cardValue+'</span><span>'+cardIcon+'</span></div>',
-            icons = '';
-
-			if ( value <= 10 ) {
-				for ( var i=1, l=value; i <= l; i++ ) {
-					icons += '<span>'+cardIcon+'</span>';
-				}
-			} else {
-				icons =
-					( value == 11 ) ? '<span>♝</span>' :
-					( value == 12 ) ? '<span>♛</span>' :
-					( value == 13 ) ? '<span>♚</span>' : '';
-			}
-			card =
-				$('<div data-id="'+id+'" class="card value'+cardValue+
-				  ' '+type+'">'+corner+'<div class="icons">'+icons+
-				  '</div>'+corner+'</div>');
-		}
-		return card;
-	}
 
 	//  Game management
 	public deal(){
@@ -388,25 +595,27 @@ class App {
 
 		if ( this.gameDealed ) {
 			this.doubleBtn.removeClass('desactivate');
-			this.playerTotal.html('');
-			this.dealerTotal.html('');
-			this.playerAces  = 0;
-			this.dealerAces  = 0;
-			this.playerCards = new Hand();
-			this.dealerCards = new Hand();
-			this.cards       = [];
-			this.cardsIndex  = 0;
+			// this.playerTotal.html('');
+			// this.dealerTotal.html('');
+			// this.playerAces  = 0;
+			// this.dealerAces  = 0;
+			// this.playerCards = new Hand();
+			// this.dealerCards = new Hand();
+			this.player.resetHand();
+			this.dealer.resetHand();
+			this.deck       = this.deckConstructor();
+			// this.cardsIndex  = 0;
 			this.doubled     = false;
 			this.canDoAction = true;
 			this.isStanding  = false;
 			$('#message').remove();
 		}
 
-		this.pCardsContainer.html('');
-		this.dCardsContainer.html('');
-		this.initDeck();
+		// this.pCardsContainer.html('');
+		// this.dCardsContainer.html('');
+		// this.initDeck();
 
-		this.changeBankroll(-1);
+		this.player.changeBankroll(-1);
 		this.ditributeCards();
 		this.gameDealed = true;
 	}
@@ -415,8 +624,8 @@ class App {
 		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.gameEnded ) return;
 
 		this.doubleBtn.addClass('desactivate');
-		this.addCard('front', 'player', () => {
-			if ( this.playerCards.sum() > 21 ) this.lose('lose-busted');
+		this.addCard('front', this.player, () => {
+			if (this.player.getScore() > 21) this.lose('lose-busted');
 		});
 	}
 
@@ -435,10 +644,11 @@ class App {
 
 	private dealerTurn()
 	{
-		this.addCard('front', 'dealer', () => {
-			this.dealerTotal.html(String(this.calculateDealerScore()));
+		this.addCard('front', this.dealer, () => {
+			// this.dealerTotal.html(String(this.calculateDealerScore()));
+			this.dealer.displayScore();
 
-			if ( this.dealerCards.sum() < 17 ) this.dealerTurn();
+			if (this.dealerCards.sum() < 17) this.dealerTurn();
 			else this.end();
 		});
 	}
@@ -450,7 +660,7 @@ class App {
 		this.changeBankroll(-1);
 		this.doubled = true;
 		this.addCard('front', 'player', () => {
-			if ( this.playerCards.sum() > 21 ) this.lose('lose-busted');
+			if ( this.player.getScore() > 21 ) this.lose('lose-busted');
 			else this.stand();
 		});
 	}
@@ -534,13 +744,14 @@ class App {
 		this.actionsNav.hide();
 		this.chips.removeClass('disabled');
 
-		this.allChips.each(function(i){
+		this.allChips.each((i) => {
 			var chip = $(this);
 			if ( chip.data('value') > this.bank ) {
 				chip.addClass('desactivate');
 
-				var chipsAvailable = this.allChips.removeClass('bet').not('.desactivate');
-				if ( chipsAvailable.size() == 0 ) this.endGame();
+				var chipsAvailable =
+					this.allChips.removeClass('bet').not('.desactivate');
+				if ( chipsAvailable.length == 0 ) this.endGame();
 				else {
 					var newChip = chipsAvailable.last();
 					newChip.addClass('bet');
@@ -556,10 +767,10 @@ class App {
 	{
 		this.canDoAction = false;
 
-		this.addCard('front', 'player', () => {
-			this.addCard('front', 'dealer', () => {
-				this.addCard('front', 'player', () => {
-					this.addCard('back', 'dealer', () => {
+		this.addCard('front', this.player, () => {
+			this.addCard('front', this.dealer, () => {
+				this.addCard('front', this.player, () => {
+					this.addCard('back', this.player, () => {
 						this.checkBlackjack();
 					});
 				});
@@ -573,8 +784,8 @@ class App {
 
 	private checkBlackjack()
 	{
-		var pScore  = this.playerCards.sum(),
-        dScore  = this.dealerCards.sum();
+		var pScore  = this.player.getScore(),
+        dScore  = this.dealer.getScore();
 
 		if ( pScore == 21 && dScore == 21 ) this.push('Push - No winner');
 		else if ( pScore == 21 ) this.win('win-blackjack');
@@ -585,29 +796,29 @@ class App {
 	}
 
 	//  Player management
-	private addToPlayerTotal( value )
-	{
-		if ( value == 1 ) {
-			value = 11;
-			this.playerAces++;
-		}
+	// private addToPlayerTotal( value )
+	// {
+	// 	// if ( value == 1 ) {
+	// 	// 	value = 11;
+	// 	// 	this.playerAces++;
+	// 	// }
 
-		this.playerCards.push(value);
-		this.playerTotal.html(String(this.calculatePlayerScore()));
-    }
+	// 	this.playerCards.push(value);
+	// 	this.playerTotal.html(String(this.calculatePlayerScore()));
+    // }
 
-	private calculatePlayerScore()
-	{
-		var score = this.playerCards.sum();
+	// private calculatePlayerScore()
+	// {
+	// 	var score = this.playerCards.sum();
 
-		// if ( score > 21 && this.playerAces > 0 ) {
-		// 	this.playerCards.splice(this.playerCards.indexOf(11), 1, 1);
-		// 	this.playerAces--;
-		// 	score = calculatePlayerScore();
-		// }
+	// 	// if ( score > 21 && this.playerAces > 0 ) {
+	// 	// 	this.playerCards.splice(this.playerCards.indexOf(11), 1, 1);
+	// 	// 	this.playerAces--;
+	// 	// 	score = calculatePlayerScore();
+	// 	// }
 
-		return score;
-	}
+	// 	return score;
+	// }
 
 	//  Dealer management
 	private revealDealerCard()
@@ -628,17 +839,17 @@ class App {
 
 	private addToDealerTotal( value )
 	{
-		if ( value == 1 ) {
-			value = 11;
-			this.dealerAces++;
-		}
+		// if ( value == 1 ) {
+		// 	value = 11;
+		// 	this.dealerAces++;
+		// }
 
 		this.dealerCards.push(value);
 	}
 
 	private calculateDealerScore()
 	{
-		var score = this.dealerCards.sum();
+		var score = this.dealer.getScore();
 
 		// if ( score > 21 && this.dealerAces > 0 ) {
 		// 	this.dealerCards.splice(this.dealerCards.indexOf(11), 1, 1);
@@ -650,29 +861,29 @@ class App {
 	}
 
 	//  Bet management
-	private initBet()
-	{
-		this.allChips.bind('click', function(e){
-			var chip = $(this);
-			if ( this.isPlaying || chip.hasClass('desactivate') ) return;
+	// private initBet()
+	// {
+	// 	this.allChips.bind('click', (e) => {
+	// 		var chip = $(this);
+	// 		if ( this.isPlaying || chip.hasClass('desactivate') ) return;
 
-			this.allChips.removeClass('bet');
-			chip.addClass('bet');
-			this.changeBet(chip.data('value'));
+	// 		this.allChips.removeClass('bet');
+	// 		chip.addClass('bet');
+	// 		this.changeBet(chip.data('value'));
 
-			this.chips.prepend(chip);
-		});
-	}
+	// 		this.chips.prepend(chip);
+	// 	});
+	// }
 
-	private changeBet( newValue ) {
-		if ( this.isPlaying ) return;
-		this.currentBet = newValue;
-	}
+	// private changeBet( newValue ) {
+	// 	if ( this.isPlaying ) return;
+	// 	this.currentBet = newValue;
+	// }
 
-	private changeBankroll( increment ) {
-		this.bank += increment * this.currentBet;
-		this.bankroll.html((this.bank / 10) + 'k');
-	}
+	// private changeBankroll( increment ) {
+	// 	this.bank += increment * this.currentBet;
+	// 	this.bankroll.html((this.bank / 10) + 'k');
+	// }
 }
 
 /*
