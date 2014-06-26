@@ -127,11 +127,13 @@ class AbstractDeck {
 	}
 
 	getCurrent() {
-		return this.cards[this.currentIndex];
+		throw new Error("This method is abstract.");
 	}
+
 }
 
 class RealisticDeck extends AbstractDeck {
+
 	constructor() {
 		super();
 
@@ -146,7 +148,15 @@ class RealisticDeck extends AbstractDeck {
 			};
 		}
 
-		this.cards.shuffle();
+		this.shuffle();
+	}
+
+	getCurrent() {
+		return this.cards[this.currentIndex];
+	}
+
+	dealNew() {
+		return this.cards[++this.currentIndex];
 	}
 }
 
@@ -244,7 +254,7 @@ class AbstractPlayer {
 
 	// addCard(side, callback) {
 
-	addCard(card:Card, callback){
+	addCard(card:Card, callback, isDealer?){
 		// var cardData  = this.cards[this.cardsIndex],
         // container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
         // card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
@@ -260,9 +270,9 @@ class AbstractPlayer {
 		});
 
 		this.cardsContainer.append(card.container);
-		if (this.isDealer === true) {
+		if (isDealer === true) {
 			zIndex = card.index();
-		} else if (this.isDealer === false) {
+		} else if (isDealer === false) {
 			zIndex = 50 - card.index();
 		} else {
 			throw new Error("AbstractPlayer should never get cards");
@@ -349,30 +359,40 @@ class Dealer extends AbstractPlayer {
 
 	}
 
+	addCard(card:Card, callBack) {
+		return super.addCard(card, callBack, true);
+	}
+
 }
 
 class Player extends AbstractPlayer {
 	isDealer = false;
-	bankValue = 100;
-	defaultBetSize = 5;
+	betSize = 5;
+	doubled = false;
 
 	constructor(public cardsContainer:JQuery,
 				public totalContainer:JQuery,
 				public isSafari:boolean,
 				private bankContainer,
-				private bankValue=100) {
-		super();
+				public bankValue=100) {
+		super(cardsContainer, totalContainer, isSafari);
 	}
 
 	changeBankroll(betMultiplier) {
-		this.bankValue += betMultiplier * this.defaultBetSize;
+		console.log("Changing bankroll by " + String(betMultiplier));
+		this.bankValue += betMultiplier * this.betSize;
 		this.bankContainer.html(String(this.bankValue));
+		console.log("New bankroll: " + String(this.bankValue));
 	}
 
 
 	addCard(card:Card, callback) {
-		super.addCard(card, callback);
+		super.addCard(card, callback, false);
 		this.displayScore();
+	}
+
+	changeBet(toValue) {
+		this.betSize = toValue;
 	}
 
 }
@@ -445,7 +465,7 @@ class App {
 	allChips        = $('.chip');
 	// bank            = 100;
 	// bankroll        = $('#this.bankroll');
-	doubled         = false;
+	// doubled         = false;
 	currentBet      = this.allChips.first().data('value');
 	resizeTimer     = null;
 	canDoAction     = true;
@@ -455,7 +475,7 @@ class App {
 	isSafari = this.html.attr('browser') === 'Safari';
 	dealer = new Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
 	player = new Player($('#player-cards'), $('#player-total'), this.isSafari,
-						$('#this.bankroll'));
+						$('#bankroll'));
 
 	constructor () {
 		this.initialize.apply(this, arguments);
@@ -473,7 +493,7 @@ class App {
 	// ?? not clear why they have opts
 	public initialize(opts) {
 		$('a[href="#"]').bind('click', function(e){ e.preventDefault(); });
-		this.initBet();
+		// this.initBet();
 		this.initResize();
 		this.initKeyboardKeys();
 
@@ -572,7 +592,7 @@ class App {
 	private addCard(side, toAdd:AbstractPlayer, callback){
 		// var cardData  = this.cards[this.cardsIndex];
 		var cardData = this.deck.getCurrent();
-		var newCard = new Card(this.cardsIndex, cardData.type, cardData.card, side);
+		var newCard = new Card(this.deck.currentIndex, cardData.type, cardData.card, side);
 
 		// var toAdd = (player === 'player') ?
 		// 	this.player :
@@ -605,7 +625,7 @@ class App {
 			this.dealer.resetHand();
 			this.deck       = this.deckConstructor();
 			// this.cardsIndex  = 0;
-			this.doubled     = false;
+			this.player.doubled     = false;
 			this.canDoAction = true;
 			this.isStanding  = false;
 			$('#message').remove();
@@ -616,7 +636,7 @@ class App {
 		// this.initDeck();
 
 		this.player.changeBankroll(-1);
-		this.ditributeCards();
+		this.disableWhile(() => this.ditributeCards());
 		this.gameDealed = true;
 	}
 
@@ -637,7 +657,7 @@ class App {
 		this.revealDealerCard();
 
 		setTimeout( () => {
-			if ( this.dealerCards.sum() < 17 ) this.dealerTurn();
+			if ( this.dealer.getScore() < 17 ) this.dealerTurn();
 			else this.end();
 		}, this.ANIM_DELAY);
 	}
@@ -648,7 +668,7 @@ class App {
 			// this.dealerTotal.html(String(this.calculateDealerScore()));
 			this.dealer.displayScore();
 
-			if (this.dealerCards.sum() < 17) this.dealerTurn();
+			if (this.dealer.getScore() < 17) this.dealerTurn();
 			else this.end();
 		});
 	}
@@ -657,9 +677,9 @@ class App {
 	{
 		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.doubleBtn.hasClass('desactivate') || this.gameEnded ) return;
 
-		this.changeBankroll(-1);
-		this.doubled = true;
-		this.addCard('front', 'player', () => {
+		this.player.changeBankroll(-1);
+		this.player.doubled = true;
+		this.addCard('front', this.player, () => {
 			if ( this.player.getScore() > 21 ) this.lose('lose-busted');
 			else this.stand();
 		});
@@ -668,23 +688,23 @@ class App {
 	private push( msg )
 	{
 		this.showMessage(msg);
-		var increment = ( this.doubled ) ? 2 : 1;
-		this.changeBankroll(increment);
+		var increment = ( this.player.doubled ) ? 2 : 1;
+		this.player.changeBankroll(increment);
 		this.stopGame();
 	}
 
 	private win( msg )
 	{
 		this.showMessage(msg);
-		var increment = ( this.doubled ) ? 4 : 2;
-		this.changeBankroll(increment);
+		var increment = ( this.player.doubled ) ? 4 : 2;
+		this.player.changeBankroll(increment);
 		this.stopGame();
 	}
 
 	private lose( msg )
 	{
 		this.showMessage(msg);
-		this.changeBankroll(0);
+		this.player.changeBankroll(0);
 		this.stopGame();
 	}
 
@@ -712,13 +732,13 @@ class App {
 		}
 
 		msg.innerHTML = content;
-		this.pCardsContainer.after(msg);
+		this.player.cardsContainer.after(msg);
 	}
 
 	private end()
 	{
-		var pScore  = this.playerCards.sum(),
-        dScore  = this.dealerCards.sum();
+		var pScore  = this.player.getScore(),
+        dScore  = this.dealer.getScore();
 
 		if ( dScore > 21 ) this.win('win-dealer-busted');
 		else if ( dScore > pScore ) this.lose('lose');
@@ -746,7 +766,7 @@ class App {
 
 		this.allChips.each((i) => {
 			var chip = $(this);
-			if ( chip.data('value') > this.bank ) {
+			if ( chip.data('value') > this.player.bankValue ) {
 				chip.addClass('desactivate');
 
 				var chipsAvailable =
@@ -755,7 +775,7 @@ class App {
 				else {
 					var newChip = chipsAvailable.last();
 					newChip.addClass('bet');
-					this.changeBet(newChip.data('value'));
+					this.player.changeBet(newChip.data('value'));
 					this.chips.prepend(newChip);
 				}
 
@@ -763,14 +783,20 @@ class App {
 		});
 	}
 
+	private disableWhile(callback) {
+		this.canDoAction = false;
+		var ret = callback();
+		this.canDoAction = true;
+
+		return ret;
+	}
+
 	private ditributeCards()
 	{
-		this.canDoAction = false;
-
 		this.addCard('front', this.player, () => {
 			this.addCard('front', this.dealer, () => {
 				this.addCard('front', this.player, () => {
-					this.addCard('back', this.player, () => {
+					this.addCard('back', this.dealer, () => {
 						this.checkBlackjack();
 					});
 				});
@@ -822,19 +848,20 @@ class App {
 
 	//  Dealer management
 	private revealDealerCard()
-	{
+	{							// FIXME: use "flipped" here
 		var card    = $('.back'),
         id      = card.data('id'),
-        data    = this.cards[id],
-        newCard = this.buildCard(id, data.type, data.value, 'front');
+        data    = this.deck.getCurrent(),
+        newCard = new Card(id, data.type, data.value, 'front');
 
-		newCard.css({
+		newCard.setCss({
 			'left' : 10 * card.index() + '%',
 			'z-index' : 50-card.index()
 		});
 
-		card.after(newCard).remove();
-		this.dealerTotal.html(String(this.calculateDealerScore()));
+		card.after(newCard.container).remove();
+		this.dealer.displayScore();
+		// this.dealerTotal.html(String(this.calculateDealerScore()));
 	}
 
 	private addToDealerTotal( value )
@@ -844,7 +871,7 @@ class App {
 		// 	this.dealerAces++;
 		// }
 
-		this.dealerCards.push(value);
+		// this.dealerCards.push(value);
 	}
 
 	private calculateDealerScore()
