@@ -47,6 +47,13 @@ module Context {
 
 
 		public withCheck(callback) {
+			// console.log("checking: ");
+
+			// ["isPlaying", "canDoAction", "isStanding", "gameEnded"].map( (prop) => {
+			// 	console.log("this." + prop + " = " + this[prop]);
+			// 	return ""
+			// });
+
 			if(!this.isPlaying || !this.canDoAction ||
 			   this.isStanding || this.gameEnded) {
 				return;

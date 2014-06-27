@@ -105,7 +105,7 @@ class App {
 		$('#chart').on('click', function() {
 			var toShow = $(this).attr('src');
 
-			console.log("got " + toShow);
+			// console.log("got " + toShow);
 
 			$('#modalImg').attr('src', toShow);
 			$('#myModal').modal('show');
@@ -135,7 +135,7 @@ class App {
 
 			_this.allChips.removeClass('bet');
 			chip.addClass('bet');
-			console.log("Trying to change bet to " + String(chip.data('value')));
+			// console.log("Trying to change bet to " + String(chip.data('value')));
 			_this.player.changeBet(chip.data('value'));
 
 			_this.chips.prepend(chip);
@@ -428,13 +428,18 @@ class App {
 	private disableWhile(callback) {
 		this.state.canDoAction = false;
 		var ret = callback();
-		this.state.canDoAction = true;
+		// need to do this in checkBlackjack
+		// this.state.canDoAction = true;
 
 		return ret;
 	}
 
 	private distributeCards()
 	{
+		// this.state.canDoAction = false;
+
+		// console.log("distributing cards");
+
 		this.addCard('front', this.player, () => {
 			this.addCard('front', this.dealer, () => {
 				this.addCard('front', this.player, () => {
@@ -444,6 +449,8 @@ class App {
 				});
 			});
 		});
+
+		// this.state.canDoAction = true;
 
 		this.dealNav.hide();
 		this.actionsNav.show();
@@ -461,6 +468,8 @@ class App {
 			this.lose('lose-blackjack');
 			this.dealer.reveal();
 		}
+
+		this.state.canDoAction = true;
 	}
 }
 
