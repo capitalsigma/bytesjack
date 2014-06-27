@@ -1,7 +1,7 @@
 module Players {
 
 	export class AbstractPlayer {
-		private hand:Hand;
+		private hand:Cards.Hand;
 		isDealer:boolean = undefined;
 		// private cardsContainer:JQuery;
 		// private totalContainer:JQuery;
@@ -10,7 +10,7 @@ module Players {
 		constructor(public cardsContainer:JQuery,
 					public totalContainer:JQuery,
 					public isSafari:boolean){
-			this.hand = new Hand();
+			this.hand = new Cards.Hand();
 		}
 
 		getScore() {
@@ -22,7 +22,7 @@ module Players {
 		}
 
 		resetHand() {
-			this.hand = new Hand();
+			this.hand = new Cards.Hand();
 			this.totalContainer.html('');
 			this.cardsContainer.html('');
 		}
@@ -33,7 +33,7 @@ module Players {
 
 		// addCard(side, callback) {
 
-		addCard(card:Card, callback, isDealer?){
+		addCard(card:Cards.Card, callback, isDealer?){
 			// var cardData  = this.cards[this.cardsIndex],
 			// container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
 			// card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
@@ -146,7 +146,7 @@ module Players {
 
 		}
 
-		addCard(card:Card, callBack) {
+		addCard(card:Cards.Card, callBack) {
 			return super.addCard(card, callBack, true);
 		}
 
@@ -177,7 +177,7 @@ module Players {
 		}
 
 
-		addCard(card:Card, callback) {
+		addCard(card:Cards.Card, callback) {
 			super.addCard(card, callback, false);
 			this.displayScore();
 		}

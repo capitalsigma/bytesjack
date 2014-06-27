@@ -12,177 +12,6 @@ interface Window {
 	App: App;
 }
 
-class CardCollection {
-	private members: Array<number>;
-
-	constructor() {
-		this.members = new Array<number>();
-	}
-
-	push(value: number) {
-		this.members.push(value);
-	}
-
-	pop() {
-		return this.members.pop();
-	}
-
-	sum() {
-		return this.members.reduce(
-			function (i, j) {
-				return i + j;
-			}, 0
-		);
-	}
-
-	count () {
-		return this.members.length;
-	}
-}
-
-class Hand extends CardCollection {
-	private hasAce: boolean;
-
-	constructor() {
-		this.hasAce = false;
-		super();
-	}
-
-	push(value: number) {
-		if (value === 1) {
-			this.hasAce = true;
-		}
-		super.push(value);
-	}
-
-	sum() {
-		var nonAce = super.sum();
-		return nonAce + (this.hasAce && nonAce <= 10 ? 10 : 0);
-	}
-
-}
-
-
-interface CardValue {
-	card:number;
-	value:number;
-	type:string;
-}
-
-class AbstractDeck {
-	types = ['clubs', 'diamonds', 'hearts', 'spades'];
-	cards: CardValue[];
-	currentIndex:number;
-
-
-	constructor() {
-		this.cards = [];
-		this.currentIndex = 0;
-	}
-
-	shuffle():void {
-		for(var j, x, i = this.cards.length; i; j = Math.floor(Math.random() * i)){
-			x = this.cards[--i];
-			this.cards[i] = this.cards[j];
-			this.cards[j] = x;
-		}
-	}
-
-	getCurrent() {
-		throw new Error("This method is abstract.");
-	}
-
-}
-
-class RealisticDeck extends AbstractDeck {
-
-	constructor() {
-		super();
-
-		for (var i = 0; i < this.types.length; i++) {
-			for (var j = 1; j <= 13; j++) {
-				var value = (j > 10) ? 10 : j;
-				this.cards.push({
-					card: j,
-					value: value,
-					type: this.types[i]
-				});
-			};
-		}
-
-		this.shuffle();
-	}
-
-	getCurrent() {
-		return this.cards[this.currentIndex];
-	}
-
-	dealNew() {
-		return this.cards[++this.currentIndex];
-	}
-}
-
-class Card {
-	public container:JQuery;
-
-	constructor(private id, private type, public value, private side) {
-		if (side === 'back') {
-			this.container = $('<div data-id="'+id+'" class="card back"></div>');
-		} else {
-			var cardValue =
-				( value == 1 ) ? 'A' :
-				( value == 11 ) ? 'J' :
-				( value == 12 ) ? 'Q' :
-				( value == 13 ) ? 'K' :
-				value,
-            cardIcon  =
-				( type == 'hearts' ) ? '♥' :
-				( type == 'diamonds' ) ? '♦' :
-				( type == 'spades' ) ? '♠' :
-				'♣',
-            corner = '<div><span>'+cardValue+'</span><span>'+cardIcon+'</span></div>',
-            icons = '';
-
-			if ( value <= 10 ) {
-				for ( var i=1, l=value; i <= l; i++ ) {
-					icons += '<span>'+cardIcon+'</span>';
-				}
-			} else {
-				icons =
-					( value == 11 ) ? '<span>♝</span>' :
-					( value == 12 ) ? '<span>♛</span>' :
-					( value == 13 ) ? '<span>♚</span>' : '';
-			}
-			this.container =
-				$('<div data-id="'+id+'" class="card value'+cardValue+
-				  ' '+type+'">'+corner+'<div class="icons">'+icons+
-				  '</div>'+corner+'</div>');
-		}
-	}
-
-	setCss(toSet) {
-		this.container.css(toSet)
-	}
-
-	getFlipped() {
-		var newSide = '';
-		if (this.side === 'back') {
-			newSide = 'front';
-		} else if(this.side === 'front') {
-			newSide = 'back';
-		} else {
-			throw new Error("No such card side");
-		}
-
-		return new Card(this.id, this.type, this.value, newSide);
-	}
-
-	index() {
-		return this.container.index();
-	}
-}
-
-
 
 // Static class hack (auto init)
 $(document).ready(function(){ window.App = new App() });
@@ -192,52 +21,24 @@ $(document).ready(function(){ window.App = new App() });
 
 class App {
 	//  Contants
-	// G.ANIM_DELAY  = 300;
     KEY_SPACE   = 32;
     KEY_S       = 83;
     KEY_D       = 68;
     KEY_1       = 49;
     KEY_2       = 50;
     KEY_3       = 51;
-    // G.PATTERNS    = [
-    //     [{deg: 0, top: 0}],
-    //     [{deg: 5, top: 0}, {deg: -5, top: 0}],
-    //     [{deg: 5, top: 15}, {deg: -1, top: 0}, {deg: -5, top: 15}],
-    //     [{deg: 9, top: 20}, {deg: 4, top: 0}, {deg: -4, top: 0},
-	// 	 {deg: -9, top: 15}],
-    //     [{deg: 12, top: 50}, {deg: 8, top: 10}, {deg: -4, top: 0},
-	// 	 {deg: -12, top: 15}, {deg: -16, top: 40}],
-    //     [{deg: 14, top: 40}, {deg: 8, top: 10}, {deg: -2, top: 5},
-	// 	 {deg: -5, top: 15}, {deg: -8, top: 40}, {deg: -14, top: 70}],
-    //     [{deg: 14, top: 70}, {deg: 8, top: 30}, {deg: 4, top: 10},
-	// 	 {deg: 0, top: 5}, {deg: -4, top: 20}, {deg: -8, top: 40},
-	// 	 {deg: -16, top: 70}]
-    // ];
 
 	//  Variables
 	types = ['clubs', 'diamonds', 'hearts', 'spades'];
-	// cards           = [];
-	deckConstructor = () => { return new RealisticDeck() };
+	deckConstructor = () => { return new Cards.RealisticDeck() };
 	deck = this.deckConstructor();
-	// cardsIndex      = 0;
 	isPlaying       = false;
 	gameDealed      = false;
 	dealNav         = $('#deal');
 	actionsNav      = $('#actions');
 	doubleBtn       = $('#double');
-	// pCardsContainer = $('#player-cards');
-	// dCardsContainer = $('#dealer-cards');
-	// playerTotal     = $('#player-total');
-	// playerCards     = new Hand();
-	// playerAces      = 0;
-	// dealerTotal     = $('#dealer-total');
-	// dealerCards     = new Hand();
-	// dealerAces      = 0;
 	chips           = $('#chips');
 	allChips        = $('.chip');
-	// bank            = 100;
-	// bankroll        = $('#this.bankroll');
-	// doubled         = false;
 	currentBet      = this.allChips.first().data('value');
 	resizeTimer     = null;
 	canDoAction     = true;
@@ -248,6 +49,8 @@ class App {
 	dealer = new Players.Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
 	player = new Players.Player($('#player-cards'), $('#player-total'), this.isSafari,
 						$('#bankroll'));
+
+
 
 	constructor () {
 		this.initialize.apply(this, arguments);
@@ -364,7 +167,7 @@ class App {
 	private addCard(side, toAdd:Players.AbstractPlayer, callback){
 		// var cardData  = this.cards[this.cardsIndex];
 		var cardData = this.deck.getCurrent();
-		var newCard = new Card(this.deck.currentIndex, cardData.type, cardData.card, side);
+		var newCard = new Cards.Card(this.deck.currentIndex, cardData.type, cardData.card, side);
 
 		// var toAdd = (player === 'player') ?
 		// 	this.player :
@@ -391,8 +194,8 @@ class App {
 			// this.dealerTotal.html('');
 			// this.playerAces  = 0;
 			// this.dealerAces  = 0;
-			// this.playerCards = new Hand();
-			// this.dealerCards = new Hand();
+			// this.playerCards = new Cards.Hand();
+			// this.dealerCards = new Cards.Hand();
 			this.player.resetHand();
 			this.dealer.resetHand();
 			this.deck       = this.deckConstructor();
@@ -412,19 +215,36 @@ class App {
 		this.gameDealed = true;
 	}
 
-	public hit(){
-		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.gameEnded ) return;
+	private withCheck(callback) {
+		if(!this.isPlaying || !this.canDoAction ||
+		   this.isStanding || this.gameEnded) {
+			return;
+		} else {
+			callback();
+		}
+	}
 
+	public hit(){
+		this.withCheck(() => { this._hit(); });
+	}
+
+	public stand() {
+		this.withCheck(() => { this._stand(); });
+	}
+
+	public doubledown() {
+		this.withCheck(() => { this._doubledown(); });
+	}
+
+	private _hit(){
 		this.doubleBtn.addClass('desactivate');
 		this.addCard('front', this.player, () => {
 			if (this.player.getScore() > 21) this.lose('lose-busted');
 		});
 	}
 
-	public stand()
+	private _stand()
 	{
-		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.gameEnded ) return;
-
 		this.isStanding = true;
 		this.revealDealerCard();
 
@@ -432,6 +252,20 @@ class App {
 			if ( this.dealer.getScore() < 17 ) this.dealerTurn();
 			else this.end();
 		}, G.ANIM_DELAY);
+	}
+
+	public _doubledown()
+	{
+		if (this.doubleBtn.hasClass('desactivate')) {
+			return;
+		}
+
+		this.player.changeBankroll(-1);
+		this.player.doubled = true;
+		this.addCard('front', this.player, () => {
+			if ( this.player.getScore() > 21 ) this.lose('lose-busted');
+			else this.stand();
+		});
 	}
 
 	private dealerTurn()
@@ -445,17 +279,7 @@ class App {
 		});
 	}
 
-	public doubledown()
-	{
-		if ( !this.isPlaying || !this.canDoAction || this.isStanding || this.doubleBtn.hasClass('desactivate') || this.gameEnded ) return;
 
-		this.player.changeBankroll(-1);
-		this.player.doubled = true;
-		this.addCard('front', this.player, () => {
-			if ( this.player.getScore() > 21 ) this.lose('lose-busted');
-			else this.stand();
-		});
-	}
 
 	private push( msg )
 	{
@@ -503,19 +327,24 @@ class App {
         default: content = '<span>Something broke, don’t know what happened...</span>'; break;
 		}
 
-		msg.innerHTML = content;
 		this.player.cardsContainer.after(msg);
 	}
 
 	private end()
 	{
+		console.log("Trying to end....");
 		var pScore  = this.player.getScore(),
         dScore  = this.dealer.getScore();
 
-		if ( dScore > 21 ) this.win('win-dealer-busted');
-		else if ( dScore > pScore ) this.lose('lose');
-		else if ( pScore > dScore ) this.win('win');
-		else if ( pScore == dScore ) this.push('push');
+		if ( dScore > 21 ) {
+			this.win('win-dealer-busted');
+		} else if ( dScore > pScore ) {
+			this.lose('lose');
+		} else if ( pScore > dScore ) {
+			this.win('win');
+		} else {
+			this.push('push');
+		}
 	}
 
 	private endGame()
@@ -551,7 +380,9 @@ class App {
 					this.chips.prepend(newChip);
 				}
 
-			} else if ( chip.hasClass('desactivate') ) chip.removeClass('desactivate');
+			} else if ( chip.hasClass('desactivate') ) {
+				chip.removeClass('desactivate');
+			}
 		});
 	}
 
@@ -624,7 +455,7 @@ class App {
 		var card    = $('.back'),
         id      = card.data('id'),
         data    = this.deck.getCurrent(),
-        newCard = new Card(id, data.type, data.value, 'front');
+        newCard = new Cards.Card(id, data.type, data.value, 'front');
 
 		newCard.setCss({
 			'left' : 10 * card.index() + '%',
