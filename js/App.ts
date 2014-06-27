@@ -3,57 +3,14 @@
  */
 
 /// <reference path='../libs/jquery.d.ts'/>
+/// <reference path='./players.ts'/>
+/// <reference path='./cards.ts'/>
+/// <reference path='./globals.ts'/>
 
-
-// Globals
-var ANIM_DELAY = 300;
-var PATTERNS = [
-        [{deg: 0, top: 0}],
-        [{deg: 5, top: 0}, {deg: -5, top: 0}],
-        [{deg: 5, top: 15}, {deg: -1, top: 0}, {deg: -5, top: 15}],
-        [{deg: 9, top: 20}, {deg: 4, top: 0}, {deg: -4, top: 0},
-		 {deg: -9, top: 15}],
-        [{deg: 12, top: 50}, {deg: 8, top: 10}, {deg: -4, top: 0},
-		 {deg: -12, top: 15}, {deg: -16, top: 40}],
-        [{deg: 14, top: 40}, {deg: 8, top: 10}, {deg: -2, top: 5},
-		 {deg: -5, top: 15}, {deg: -8, top: 40}, {deg: -14, top: 70}],
-        [{deg: 14, top: 70}, {deg: 8, top: 30}, {deg: 4, top: 10},
-		 {deg: 0, top: 5}, {deg: -4, top: 20}, {deg: -8, top: 40},
-		 {deg: -16, top: 70}]
-    ];
-
-
-/*
- * Array shuffle <http://snipplr.com/view/535>
- * Array sum <http://snipplr.com/view/533>
- *
- */
-
-interface Array<T> {
-	// sum(): T;
-	shuffle(): Array<T>;
-}
 
 interface Window {
 	App: App;
 }
-
-// class CardArray extends ExtendibleNumberArray {
-// 	suffle():CardArray {
-// 		for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i)){
-// 			x = this[--i];
-// 			this[i] = this[j];
-// 			this[j] = x;
-// 		}
-// 		return this;
-// 	}
-
-// 	sum():number {
-// 		for(var s = 0, i = this.length; i; s += this[--i]){};
-// 		return s;
-// 	}
-// }
-
 
 class CardCollection {
 	private members: Array<number>;
@@ -226,213 +183,6 @@ class Card {
 }
 
 
-class AbstractPlayer {
-	private hand:Hand;
-	isDealer:boolean = undefined;
-	// private cardsContainer:JQuery;
-	// private totalContainer:JQuery;
-
-	// typescript doesn't have protected variables
-	constructor(public cardsContainer:JQuery,
-				public totalContainer:JQuery,
-				public isSafari:boolean){
-		this.hand = new Hand();
-	}
-
-	getScore() {
-		return this.hand.sum();
-	}
-
-	displayScore() {
-		this.totalContainer.html(String(this.getScore()));
-	}
-
-	resetHand() {
-		this.hand = new Hand();
-		this.totalContainer.html('');
-		this.cardsContainer.html('');
-	}
-
-	updateTotal(newTotal:number) {
-		this.totalContainer.html(String(newTotal));
-	}
-
-	// addCard(side, callback) {
-
-	addCard(card:Card, callback, isDealer?){
-		// var cardData  = this.cards[this.cardsIndex],
-        // container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
-        // card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
-		var zIndex:number;
-
-		this.hand.push(card.value);
-		// this.cardsIndex++;
-		// this.canDoAction = false;
-
-		card.setCss({
-			'top'   : '-150%',
-			'left'  : '100%'
-		});
-
-		this.cardsContainer.append(card.container);
-
-		if (isDealer === false) {
-			zIndex = card.index();
-		} else if (isDealer === true) {
-			zIndex = 50 - card.index();
-		} else {
-			throw new Error("AbstractPlayer should never get cards");
-		}
-		// zIndex = this.isDealer ? card.index() : 50-card.index();
-		card.setCss({'z-index': String(zIndex)});
-
-		setTimeout(() => {
-			card.setCss({
-				'top'     : '0%',
-				'left'    : 10 * card.index() + '%'
-			});
-			this.rotateCards();
-
-
-			setTimeout(() => {
-				this.centerContainer();
-				// if ( player == 'player' ) this.addToPlayerTotal(cardData.value);
-				// else                      this.addToDealerTotal(cardData.value);
-
-				// this.canDoAction = true;
-				if ( callback != undefined ) callback.call();
-			}, ANIM_DELAY + 100);
-		}, 10);
-	}
-
-
-	centerContainer(){
-		var lastCard    = this.cardsContainer.children('.card:last-child'),
-        totalWidth  = 0;
-
-		if ( lastCard.length == 0 ) return;
-
-		totalWidth = lastCard.position().left + lastCard.width();
-		// if ( this.html.attr('browser') == 'Safari' )
-		if (this.isSafari) {
-			this.cardsContainer.css('-webkit-transform',
-									'translate3d('+ -totalWidth / 2 +'px,0,0)');
-		} else {
-			this.cardsContainer.css('margin-left', -totalWidth / 2 + 'px');
-		}
-	}
-
-
-	rotateCards(isDealer?:boolean){
-		if (isDealer === undefined) {
-			throw new Error("Not implemented error");
-		}
-
-		console.log("Cards rotating");
-		var cards = this.cardsContainer.children('.card'),
-        numCards  = cards.length - 1,
-        increment = ( isDealer ) ? 1 : -1,
-        pattern   = ( PATTERNS[numCards] ) ?
-			PATTERNS[numCards] :
-			PATTERNS[PATTERNS.length-1];
-
-		cards.each(function (i) {
-			var deg     = ( i < pattern.length ) ?
-				pattern[i].deg :
-				pattern[pattern.length-1].deg,
-            offset  = ( i < pattern.length ) ?
-				pattern[i].top :
-				pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
-
-			console.log("rotating by " + String(deg * increment));
-			console.log(String(i));
-			$(this).css({
-				'-webkit-transform' : 'rotate('+ deg * increment +'deg)',
-				'-khtml-transform' : 'rotate('+ deg * increment +'deg)',
-				'-moz-transform' : 'rotate('+ deg * increment +'deg)',
-				'-ms-transform' : 'rotate('+ deg * increment +'deg)',
-				'transform' : 'rotate('+ deg * increment +'deg)',
-				'top' : offset * -increment + 'px'
-			});
-		});
-	}
-
-}
-
-class Dealer extends AbstractPlayer {
-	// isDealer:boolean = true;
-	// constructor(cardsContainer:JQuery,
-	// 			totalContainer:JQuery,
-	// 			isSafari:boolean){
-	// 	super(cardsContainer, totalContainer, isSafari);
-	// 	this.isDealer = true;
-	// }
-
-	doTurn() {
-
-	}
-
-	addCard(card:Card, callBack) {
-		return super.addCard(card, callBack, true);
-	}
-
-	rotateCards() {
-		super.rotateCards(true);
-	}
-
-}
-
-class Player extends AbstractPlayer {
-	// isDealer = false;
-	betSize = 5;
-	doubled = false;
-
-	constructor(public cardsContainer:JQuery,
-				public totalContainer:JQuery,
-				public isSafari:boolean,
-				private bankContainer,
-				public bankValue=100) {
-		super(cardsContainer, totalContainer, isSafari);
-	}
-
-	changeBankroll(betMultiplier) {
-		console.log("Changing bankroll by " + String(betMultiplier));
-		this.bankValue += betMultiplier * this.betSize;
-		this.bankContainer.html(String(this.bankValue));
-		console.log("New bankroll: " + String(this.bankValue));
-	}
-
-
-	addCard(card:Card, callback) {
-		super.addCard(card, callback, false);
-		this.displayScore();
-	}
-
-	rotateCards() {
-		super.rotateCards(false);
-	}
-
-
-	changeBet(toValue) {
-		this.betSize = toValue;
-	}
-
-}
-
-
-// Array.prototype.shuffle = function() {
-// 	for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i)){
-// 		x = this[--i];
-// 		this[i] = this[j];
-// 		this[j] = x;
-// 	}
-// 	return this;
-// };
-
-// Array.prototype.sum = function() {
-// 	for(var s = 0, i = this.length; i; s += this[--i]){};
-// 	return s;
-// };
 
 // Static class hack (auto init)
 $(document).ready(function(){ window.App = new App() });
@@ -442,27 +192,27 @@ $(document).ready(function(){ window.App = new App() });
 
 class App {
 	//  Contants
-	ANIM_DELAY  = 300;
+	// G.ANIM_DELAY  = 300;
     KEY_SPACE   = 32;
     KEY_S       = 83;
     KEY_D       = 68;
     KEY_1       = 49;
     KEY_2       = 50;
     KEY_3       = 51;
-    PATTERNS    = [
-        [{deg: 0, top: 0}],
-        [{deg: 5, top: 0}, {deg: -5, top: 0}],
-        [{deg: 5, top: 15}, {deg: -1, top: 0}, {deg: -5, top: 15}],
-        [{deg: 9, top: 20}, {deg: 4, top: 0}, {deg: -4, top: 0},
-		 {deg: -9, top: 15}],
-        [{deg: 12, top: 50}, {deg: 8, top: 10}, {deg: -4, top: 0},
-		 {deg: -12, top: 15}, {deg: -16, top: 40}],
-        [{deg: 14, top: 40}, {deg: 8, top: 10}, {deg: -2, top: 5},
-		 {deg: -5, top: 15}, {deg: -8, top: 40}, {deg: -14, top: 70}],
-        [{deg: 14, top: 70}, {deg: 8, top: 30}, {deg: 4, top: 10},
-		 {deg: 0, top: 5}, {deg: -4, top: 20}, {deg: -8, top: 40},
-		 {deg: -16, top: 70}]
-    ];
+    // G.PATTERNS    = [
+    //     [{deg: 0, top: 0}],
+    //     [{deg: 5, top: 0}, {deg: -5, top: 0}],
+    //     [{deg: 5, top: 15}, {deg: -1, top: 0}, {deg: -5, top: 15}],
+    //     [{deg: 9, top: 20}, {deg: 4, top: 0}, {deg: -4, top: 0},
+	// 	 {deg: -9, top: 15}],
+    //     [{deg: 12, top: 50}, {deg: 8, top: 10}, {deg: -4, top: 0},
+	// 	 {deg: -12, top: 15}, {deg: -16, top: 40}],
+    //     [{deg: 14, top: 40}, {deg: 8, top: 10}, {deg: -2, top: 5},
+	// 	 {deg: -5, top: 15}, {deg: -8, top: 40}, {deg: -14, top: 70}],
+    //     [{deg: 14, top: 70}, {deg: 8, top: 30}, {deg: 4, top: 10},
+	// 	 {deg: 0, top: 5}, {deg: -4, top: 20}, {deg: -8, top: 40},
+	// 	 {deg: -16, top: 70}]
+    // ];
 
 	//  Variables
 	types = ['clubs', 'diamonds', 'hearts', 'spades'];
@@ -495,8 +245,8 @@ class App {
 	gameEnded       = false;
 	html            = $('html');
 	isSafari = this.html.attr('browser') === 'Safari';
-	dealer = new Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
-	player = new Player($('#player-cards'), $('#player-total'), this.isSafari,
+	dealer = new Players.Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
+	player = new Players.Player($('#player-cards'), $('#player-total'), this.isSafari,
 						$('#bankroll'));
 
 	constructor () {
@@ -611,7 +361,7 @@ class App {
 	// 	this.cards.shuffle();
 	// }
 
-	private addCard(side, toAdd:AbstractPlayer, callback){
+	private addCard(side, toAdd:Players.AbstractPlayer, callback){
 		// var cardData  = this.cards[this.cardsIndex];
 		var cardData = this.deck.getCurrent();
 		var newCard = new Card(this.deck.currentIndex, cardData.type, cardData.card, side);
@@ -681,7 +431,7 @@ class App {
 		setTimeout( () => {
 			if ( this.dealer.getScore() < 17 ) this.dealerTurn();
 			else this.end();
-		}, this.ANIM_DELAY);
+		}, G.ANIM_DELAY);
 	}
 
 	private dealerTurn()
