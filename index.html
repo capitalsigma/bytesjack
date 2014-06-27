@@ -7,37 +7,74 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
+	<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/typekit.css" />
+	<!-- bootstrap breaks the display -->
 
-    <script type="text/javascript" src="http://use.typekit.com/ovn6yje.js"></script>
+    <!-- <script type="text/javascript" src="http://use.typekit.com/ovn6yje.js"></script> -->
     <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
   </head>
   <body>
+
     <a id="github-ribbon" href="https://github.com/heliom/bytesjack"><img style="z-index: 1; position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
     <script>if(navigator.standalone)document.querySelector('#github-ribbon').style.display='none'</script>
+
+
     <div id="game">
-      <h1>BytesJack</h1>
+
+  	  <div id="view-chart">
+  		<!-- <a href="#" rel="tooltip" title="Click To View" -->
+  		<!--    data-toggle="tooltip" -->
+  		<!--    data-placement="bottom" id="chart-tooltip"> -->
+  		  <img src="./resources/chart.jpg" class="img-responsive" id="chart">
+  		<!-- </a> -->
+
+  		<form class="form-horizontal" role="form">
+       <!-- Image trigger modal -->
+
+       <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="myModalLabel">Basic Strategy</h4>
+            </div>
+          <div class="modal-body">
+            <img id="modalImg" class="img-responsive" src="">
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+  </form>
+
+  	  </div>
+
+
+      <h1 >Rounds remaining <div id="left-text"> 5 </div></h1>
       <div id="dealer-cards">
       </div>
 
-      <div id="ui">
-
+      <div id="ui" class="no-box">
         <div class="total">Dealer <span id="dealer-total"></span></div>
 
         <div class="zone">
-          <span class="label">Your Bytes</span>
+          <span class="label">Your Bankroll</span>
           <span class="label right">Your Bet</span>
-          <div id="bankroll">10k</div>
-          <div id="deal"><a href="#" onclick="App.deal();">Deal</a><span class="shortcut">spacebar</span></div>
+          <div id="bankroll">100</div>
+          <div id="deal">
+			<a href="#" onclick="App.deal();">Deal</a>
+			<span class="shortcut">spacebar</span>
+		  </div>
           <ul id="actions">
             <li><a href="#" onclick="App.hit();">Hit</a><span class="shortcut">spacebar</span></li>
             <li><a href="#" onclick="App.stand();">Stand</a><span class="shortcut">s</span></li>
             <li><a id="double" href="#" onclick="App.doubledown();">Double</a><span class="shortcut">d</span></li>
           </ul>
           <div id="chips">
-            <div class="chip bet red" data-value="1"><span>100b</span></div>
-            <div class="chip blue" data-value="5"><span>500b</span></div>
-            <div class="chip yellow" data-value="10"><span>1k</span></div>
+            <div class="chip bet red" data-value="1"><span>10</span></div>
+            <div class="chip blue" data-value="5"><span>5</span></div>
+            <div class="chip yellow" data-value="10"><span>1</span></div>
           </div>
         </div>
 
@@ -48,16 +85,10 @@
       <div id="player-cards"></div>
     </div>
 
-    <script defer type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.min.js"></script>
-    <script defer type="text/javascript" src="js/App.js" ></script>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <!-- <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.min.js"></script> -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+    <script type="text/javascript" src="js/App.js" ></script>
 
-      ga('create', 'UA-31026266-11', 'heliom.github.io');
-      ga('send', 'pageview');
-    </script>
   </body>
 </html>
