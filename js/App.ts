@@ -77,6 +77,10 @@ class CardCollection {
 			}, 0
 		);
 	}
+
+	count () {
+		return this.members.length;
+	}
 }
 
 class Hand extends CardCollection {
@@ -98,6 +102,7 @@ class Hand extends CardCollection {
 		var nonAce = super.sum();
 		return nonAce + (this.hasAce && nonAce <= 10 ? 10 : 0);
 	}
+
 }
 
 
@@ -258,7 +263,7 @@ class AbstractPlayer {
 		// var cardData  = this.cards[this.cardsIndex],
         // container = ( player == 'player' ) ? this.pCardsContainer : this.dCardsContainer,
         // card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
-		var zIndex    = 0;
+		var zIndex:number;
 
 		this.hand.push(card.value);
 		// this.cardsIndex++;
@@ -270,9 +275,10 @@ class AbstractPlayer {
 		});
 
 		this.cardsContainer.append(card.container);
-		if (isDealer === true) {
+
+		if (isDealer === false) {
 			zIndex = card.index();
-		} else if (isDealer === false) {
+		} else if (isDealer === true) {
 			zIndex = 50 - card.index();
 		} else {
 			throw new Error("AbstractPlayer should never get cards");
@@ -317,15 +323,20 @@ class AbstractPlayer {
 	}
 
 
-	private rotateCards(){
+	rotateCards(isDealer?:boolean){
+		if (isDealer === undefined) {
+			throw new Error("Not implemented error");
+		}
+
+		console.log("Cards rotating");
 		var cards = this.cardsContainer.children('.card'),
-        numCards  = this.cardsContainer.length - 1,
-        increment = ( this.isDealer ) ? 1 : -1,
+        numCards  = cards.length - 1,
+        increment = ( isDealer ) ? 1 : -1,
         pattern   = ( PATTERNS[numCards] ) ?
 			PATTERNS[numCards] :
 			PATTERNS[PATTERNS.length-1];
 
-		cards.each((i) => {
+		cards.each(function (i) {
 			var deg     = ( i < pattern.length ) ?
 				pattern[i].deg :
 				pattern[pattern.length-1].deg,
@@ -333,6 +344,8 @@ class AbstractPlayer {
 				pattern[i].top :
 				pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
 
+			console.log("rotating by " + String(deg * increment));
+			console.log(String(i));
 			$(this).css({
 				'-webkit-transform' : 'rotate('+ deg * increment +'deg)',
 				'-khtml-transform' : 'rotate('+ deg * increment +'deg)',
@@ -347,7 +360,7 @@ class AbstractPlayer {
 }
 
 class Dealer extends AbstractPlayer {
-	isDealer:boolean = true;
+	// isDealer:boolean = true;
 	// constructor(cardsContainer:JQuery,
 	// 			totalContainer:JQuery,
 	// 			isSafari:boolean){
@@ -363,10 +376,14 @@ class Dealer extends AbstractPlayer {
 		return super.addCard(card, callBack, true);
 	}
 
+	rotateCards() {
+		super.rotateCards(true);
+	}
+
 }
 
 class Player extends AbstractPlayer {
-	isDealer = false;
+	// isDealer = false;
 	betSize = 5;
 	doubled = false;
 
@@ -390,6 +407,11 @@ class Player extends AbstractPlayer {
 		super.addCard(card, callback, false);
 		this.displayScore();
 	}
+
+	rotateCards() {
+		super.rotateCards(false);
+	}
+
 
 	changeBet(toValue) {
 		this.betSize = toValue;
@@ -504,7 +526,7 @@ class App {
 
 	//  Resize management
 	private initResize() {
-		$(window).bind('resize', this.onWindowResize);
+		$(window).bind('resize', () => { this.onWindowResize });
 		this.onWindowResize(null);
 	}
 
