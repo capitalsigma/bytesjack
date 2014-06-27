@@ -25,7 +25,7 @@ $(document).ready(function(){ window.App = new App() });
 
 class App {
 	//  Constants
-	MAX_TURNS = 5;
+	MAX_TURNS = 10;
 
     KEY_SPACE   = 32;
     KEY_S       = 83;
@@ -54,13 +54,14 @@ class App {
 								this.isSafari);
 	player = new Players.Player($('#player-cards'), $('#player-total'),
 								this.isSafari, $('#bankroll'));
+	// hands count from zero
 	deckManager = new Context.DeckManager({
 		"default": () => { return new Cards.RealisticDeck(); },
-		"1": () => { return new Cards.RiggedDeck({
-			"0": 1,
-			"1": 1,
-			"2": 1,
-			"3": 1
+		"4": () => { return new Cards.RiggedDeck({
+			"0": 10,
+			"1": 7,
+			"2": 6,
+			// "3": 1
 		}); }});
 
 	state = new Context.StateManager(this.MAX_TURNS, $('#left-text'),

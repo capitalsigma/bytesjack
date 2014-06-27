@@ -12,9 +12,35 @@ module Context {
 		playerHand:Cards.Hand;
 		dealerHand:Cards.Hand;
 		actions:Array<Action>;
+		public actionsTaken:Array<string>;
 
 		constructor () {
 			this.actions = new Array<Action>();
+		}
+
+
+		actionToString (act:Action) {
+			switch (act) {
+			case Action.Hit:
+				return "Hit";
+				break;
+
+			case Action.Stand:
+				return "Stand";
+				break;
+
+			case Action.Double:
+				return "Double";
+				break;
+			}
+		}
+
+		toJSON () {				// hack
+			this.actionsTaken = this.actions.map((x) => {
+				return this.actionToString(x)
+			});
+			this.actions = undefined;
+			return this;
 		}
 	}
 
@@ -116,24 +142,8 @@ module Context {
 			return this.deckManager.newDeck(this.currentHandIndex);
 		}
 
-		actionToString (act:Action) {
-			switch (act) {
-			case Action.Hit:
-				return "Hit";
-				break;
-
-			case Action.Stand:
-				return "Stand";
-				break;
-
-			case Action.Double:
-				return "Double";
-				break;
-			}
-		}
-
 		atMaxHands() {
-			return this.maxHands < this.currentHandIndex;
+			return this.maxHands <= this.currentHandIndex;
 		}
 
 		historyToString() {
