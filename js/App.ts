@@ -78,10 +78,24 @@ class App {
 		this.initBet();
 		this.initResize();
 		this.initKeyboardKeys();
+		this.initDisplay();
 
 		setTimeout(function(){
 			window.scrollTo(0, 1)
 		}, 500);
+	}
+
+	private initDisplay() {
+		$('#chart').tooltip({
+			title: "Click to see more.",
+			placement: "bottom"
+		});
+
+		$('#chart').on('click', function() {
+			var toShow = $(this).attr('src');
+			$('#mimig').attr('src', toShow);
+			$('#myModal').modal('show');
+		});
 	}
 
 	//  Resize management

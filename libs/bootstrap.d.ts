@@ -4,7 +4,7 @@
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
 
-/// <reference path="../jquery/jquery.d.ts"/>
+/// <reference path="./jquery.d.ts"/>
 
 interface ModalOptions {
     backdrop?: boolean;
@@ -48,7 +48,7 @@ interface PopoverOptions {
 }
 
 interface CollapseOptions {
-    parent?: any;    
+    parent?: any;
     toggle?: boolean;
 }
 
