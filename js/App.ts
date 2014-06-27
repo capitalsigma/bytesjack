@@ -93,7 +93,10 @@ class App {
 
 		$('#chart').on('click', function() {
 			var toShow = $(this).attr('src');
-			$('#mimig').attr('src', toShow);
+
+			console.log("got " + toShow);
+
+			$('#modalImg').attr('src', toShow);
 			$('#myModal').modal('show');
 		});
 	}
