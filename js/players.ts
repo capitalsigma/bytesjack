@@ -4,7 +4,7 @@
 
 module Players {
 	export class AbstractPlayer {
-		private hand:Cards.Hand;
+		public hand:Cards.Hand;
 		isDealer:boolean = undefined;
 		// private cardsContainer:JQuery;
 		// private totalContainer:JQuery;
@@ -120,8 +120,6 @@ module Players {
 					pattern[i].top :
 					pattern[pattern.length-1].top + (20 * (i - pattern.length + 1));
 
-				console.log("rotating by " + String(deg * increment));
-				console.log(String(i));
 				$(this).css({
 					'-webkit-transform' : 'rotate('+ deg * increment +'deg)',
 					'-khtml-transform' : 'rotate('+ deg * increment +'deg)',
@@ -139,6 +137,10 @@ module Players {
 
 		lastCard():Cards.Card {
 			return this.hand.lastCard();
+		}
+
+		hasBusted() {
+			return this.getScore() > 21;
 		}
 
 	}
@@ -178,11 +180,15 @@ module Players {
 			this.displayScore();
 		}
 
+		doneBetting() {
+			return this.getScore() > 17;
+		}
+
 	}
 
 	export class Player extends AbstractPlayer {
 		// isDealer = false;
-		betSize = 5;
+		betSize = 10;
 		doubled = false;
 
 		constructor(public cardsContainer:JQuery,
@@ -194,10 +200,8 @@ module Players {
 		}
 
 		changeBankroll(betMultiplier) {
-			console.log("Changing bankroll by " + String(betMultiplier));
 			this.bankValue += betMultiplier * this.betSize;
 			this.bankContainer.html(String(this.bankValue));
-			console.log("New bankroll: " + String(this.bankValue));
 		}
 
 
@@ -212,7 +216,9 @@ module Players {
 
 
 		changeBet(toValue) {
+			console.log("Player, changing bet to " + String(toValue));
 			this.betSize = toValue;
+			console.log("New bet size: " + this.betSize);
 		}
 
 		win() {

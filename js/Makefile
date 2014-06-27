@@ -1,6 +1,6 @@
 CC=tsc
 MAIN=App.ts
-DEPS=players.ts globals.ts cards.ts
+DEPS=players.ts globals.ts cards.ts context.ts
 OUT=App.js
 
 build: *.ts

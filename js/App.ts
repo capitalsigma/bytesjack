@@ -6,6 +6,7 @@
 /// <reference path='./players.ts'/>
 /// <reference path='./cards.ts'/>
 /// <reference path='./globals.ts'/>
+/// <reference path='./context.ts'/>
 
 
 interface Window {
@@ -20,7 +21,9 @@ $(document).ready(function(){ window.App = new App() });
 // var App = function() { };
 
 class App {
-	//  Contants
+	//  Constants
+	MAX_TURNS = 5;
+
     KEY_SPACE   = 32;
     KEY_S       = 83;
     KEY_D       = 68;
@@ -32,8 +35,8 @@ class App {
 	types = ['clubs', 'diamonds', 'hearts', 'spades'];
 	deckConstructor = () => { return new Cards.RealisticDeck() };
 	deck = this.deckConstructor();
-	isPlaying       = false;
-	gameDealed      = false;
+	// isPlaying       = false;
+	// gameDealed      = false;
 	dealNav         = $('#deal');
 	actionsNav      = $('#actions');
 	doubleBtn       = $('#double');
@@ -41,14 +44,16 @@ class App {
 	allChips        = $('.chip');
 	currentBet      = this.allChips.first().data('value');
 	resizeTimer     = null;
-	canDoAction     = true;
-	isStanding      = false;
-	gameEnded       = false;
+	// canDoAction     = true;
+	// isStanding      = false;
+	// gameEnded       = false;
 	html            = $('html');
 	isSafari = this.html.attr('browser') === 'Safari';
-	dealer = new Players.Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
-	player = new Players.Player($('#player-cards'), $('#player-total'), this.isSafari,
-						$('#bankroll'));
+	dealer = new Players.Dealer($('#dealer-cards'), $('#dealer-total'),
+								this.isSafari);
+	player = new Players.Player($('#player-cards'), $('#player-total'),
+								this.isSafari, $('#bankroll'));
+	state = new Context.StateManager(this.MAX_TURNS, $('#left-text'));
 
 
 
@@ -68,7 +73,7 @@ class App {
 	// ?? not clear why they have opts
 	public initialize(opts) {
 		$('a[href="#"]').bind('click', function(e){ e.preventDefault(); });
-		// this.initBet();
+		this.initBet();
 		this.initResize();
 		this.initKeyboardKeys();
 
@@ -90,6 +95,23 @@ class App {
 		}, 100);
 	}
 
+
+	private initBet () {
+		// ugly because we need access to these things in the closure
+		var _this = this;
+		this.allChips.bind('click', function(e){
+			var chip = $(this);
+			if ( _this.state.isPlaying || chip.hasClass('desactivate') ) return;
+
+			_this.allChips.removeClass('bet');
+			chip.addClass('bet');
+			console.log("Trying to change bet to " + String(chip.data('value')));
+			_this.player.changeBet(chip.data('value'));
+
+			_this.chips.prepend(chip);
+      });
+	}
+
 	//  Keyboard managment
 	private initKeyboardKeys() {
 		$(document).bind('keydown', this.onKeyDown);
@@ -99,7 +121,7 @@ class App {
 	private onKeyDown(e:any) {
 		switch ( e.keyCode ) {
         case this.KEY_SPACE :
-			( this.isPlaying )
+			( this.state.isPlaying )
 				? this.actionsNav.children('li:first-child').children('a').addClass('active')
 				: this.dealNav.children('a').addClass('active');
 			break;
@@ -126,7 +148,7 @@ class App {
 
 		switch ( e.keyCode ) {
         case this.KEY_SPACE :
-			if ( this.isPlaying ) {
+			if ( this.state.isPlaying ) {
 				this.hit();
 				this.actionsNav.children('li:first-child').children('a').removeClass('active')
 			} else {
@@ -148,31 +170,15 @@ class App {
 	}
 
 	private selectChip (index){
-		if ( this.isPlaying || this.gameEnded ) return;
+		if (!this.state.bettable()) return;
 		this.allChips.eq(index).trigger('click');
 	}
-
-	//  Cards management
-	// private initDeck(){
-	// 	for ( var i = 0; i < this.types.length; i++ ) {
-	// 		for ( var j = 1; j <= 13; j++ ) {
-	// 			var value = ( j > 10 ) ? 10 : j;
-	// 			this.cards.push({ card:j, value: value, type: this.types[i] });
-	// 		};
-	// 	}
-
-	// 	this.cards.shuffle();
-	// }
 
 	private addCard(side, toAdd:Players.AbstractPlayer, callback){
 		// var cardData  = this.cards[this.cardsIndex];
 		var cardData = this.deck.dealNew();
 		var newCard = new Cards.Card(cardData.type, cardData.card, side,
-									this.deck.currentIndex);
-
-		// var toAdd = (player === 'player') ?
-		// 	this.player :
-		// 	this.dealer;
+									 this.deck.currentIndex);
 
 		toAdd.addCard(newCard, callback);
 	}
@@ -185,59 +191,43 @@ class App {
 
 	//  Game management
 	public deal(){
-		if ( this.isPlaying || !this.canDoAction || this.gameEnded ) return;
+		if (!this.state.dealable()) return;
 
-		this.isPlaying = true;
+		this.state.isPlaying = true;
 
-		if ( this.gameDealed ) {
+		if ( this.state.gameDealed ) {
 			this.doubleBtn.removeClass('desactivate');
-			// this.playerTotal.html('');
-			// this.dealerTotal.html('');
-			// this.playerAces  = 0;
-			// this.dealerAces  = 0;
-			// this.playerCards = new Cards.Hand();
-			// this.dealerCards = new Cards.Hand();
 			this.player.resetHand();
 			this.dealer.resetHand();
 			this.deck       = this.deckConstructor();
-			// this.cardsIndex  = 0;
 			this.player.doubled     = false;
-			this.canDoAction = true;
-			this.isStanding  = false;
+			this.state.canDoAction = true;
+			this.state.isStanding  = false;
 			$('#message').remove();
 		}
 
-		// this.pCardsContainer.html('');
-		// this.dCardsContainer.html('');
-		// this.initDeck();
-
 		this.player.changeBankroll(-1);
 		this.disableWhile(() => this.distributeCards());
-		this.gameDealed = true;
+		this.state.gameDealed = true;
 	}
 
-	private withCheck(callback) {
-		if(!this.isPlaying || !this.canDoAction ||
-		   this.isStanding || this.gameEnded) {
-			return;
-		} else {
-			callback();
-		}
-	}
+
 
 	public hit(){
-		this.withCheck(() => { this._hit(); });
+		this.state.withCheck(() => { this._hit(); });
 	}
 
 	public stand() {
-		this.withCheck(() => { this._stand(); });
+		this.state.withCheck(() => { this._stand(); });
 	}
 
 	public doubledown() {
-		this.withCheck(() => { this._doubledown(); });
+		this.state.withCheck(() => { this._doubledown(); });
 	}
 
 	private _hit(){
+		this.state.hit();
+
 		this.doubleBtn.addClass('desactivate');
 		this.addCard('front', this.player, () => {
 			if (this.player.getScore() > 21) this.lose('lose-busted');
@@ -246,12 +236,12 @@ class App {
 
 	private _stand()
 	{
-		this.isStanding = true;
+		this.state.stand();
 		// this.revealDealerCard();
 		this.dealer.reveal();
 
 		setTimeout( () => {
-			if ( this.dealer.getScore() < 17 ) this.dealerTurn();
+			if (!this.dealer.doneBetting()) this.dealerTurn();
 			else this.end();
 		}, G.ANIM_DELAY);
 	}
@@ -262,10 +252,12 @@ class App {
 			return;
 		}
 
+		this.state.doubledown();
+
 		this.player.changeBankroll(-1);
 		this.player.doubled = true;
 		this.addCard('front', this.player, () => {
-			if ( this.player.getScore() > 21 ) this.lose('lose-busted');
+			if (this.player.hasBusted()) this.lose('lose-busted');
 			else this.stand();
 		});
 	}
@@ -275,7 +267,7 @@ class App {
 		this.addCard('front', this.dealer, () => {
 			this.dealer.displayScore();
 
-			if (this.dealer.getScore() < 17) this.dealerTurn();
+			if (!this.dealer.doneBetting()) this.dealerTurn();
 			else this.end();
 		});
 	}
@@ -284,22 +276,22 @@ class App {
 
 	private push( msg )
 	{
-		this.showMessage(msg);
-		this.player.push();
-		this.stopGame();
+		this._showAndQuit(msg, () => this.player.push());
 	}
 
 	private win( msg )
 	{
-		this.showMessage(msg);
-		this.player.win();
-		this.stopGame();
+		this._showAndQuit(msg, () => this.player.win());
 	}
 
 	private lose( msg )
 	{
+		this._showAndQuit(msg, () => this.player.lose());
+	}
+
+	private _showAndQuit(msg: String, callback) {
 		this.showMessage(msg);
-		this.player.lose();
+		callback();
 		this.stopGame();
 	}
 
@@ -315,15 +307,25 @@ class App {
 		msg.id        = 'message';
 
 		switch ( status ) {
-        case 'win': content = 'You win'; break;
-        case 'win-blackjack': content = 'You win<span>Blackjack</span>'; break;
-        case 'win-dealer-busted': content = 'You win<span>Dealer busted</span>'; break;
-        case 'lose': content = 'You lose'; break;
-        case 'lose-blackjack': content = 'You lose<span>Blackjack</span>'; break;
-        case 'lose-busted': content = 'You lose<span>Busted</span>'; break;
-        case 'push': content = 'Push<span>No winner</span>'; break;
-        case 'game-over': content = 'Game over'; break;
-        default: content = '<span>Something broke, don’t know what happened...</span>'; break;
+        case 'win': content =
+				'You win'; break;
+        case 'win-blackjack': content =
+				'You win<span>Blackjack</span>'; break;
+        case 'win-dealer-busted': content =
+				'You win<span>Dealer busted</span>'; break;
+        case 'lose': content =
+				'You lose'; break;
+        case 'lose-blackjack': content =
+				'You lose<span>Blackjack</span>'; break;
+        case 'lose-busted': content =
+				'You lose<span>Busted</span>'; break;
+        case 'push': content =
+				'Push<span>No winner</span>'; break;
+        case 'game-over': content =
+				'Game over'; break;
+        default: content =
+				'<span>Something broke, don’t know what happened...</span>';
+			break;
 		}
 
 		msg.innerHTML = content;
@@ -332,11 +334,10 @@ class App {
 
 	private end()
 	{
-		console.log("Trying to end....");
 		var pScore  = this.player.getScore(),
         dScore  = this.dealer.getScore();
 
-		if ( dScore > 21 ) {
+		if (this.dealer.hasBusted()) {
 			this.win('win-dealer-busted');
 		} else if ( dScore > pScore ) {
 			this.lose('lose');
@@ -350,7 +351,7 @@ class App {
 	private endGame()
 	{
 		this.showMessage('game-over');
-		this.gameEnded = true;
+		this.state.gameEnded = true;
 
 		var overlay = document.createElement('div');
 		overlay.id = 'overlay';
@@ -360,7 +361,7 @@ class App {
 
 	private stopGame()
 	{
-		this.isPlaying = false;
+		this.state.isPlaying = false;
 		this.dealNav.show();
 		this.actionsNav.hide();
 		this.chips.removeClass('disabled');
@@ -384,12 +385,18 @@ class App {
 				chip.removeClass('desactivate');
 			}
 		});
+
+		// not sure where else this should go
+		this.state.endTurn(this.dealer.hand, this.player.hand);
+		if (this.state.atMaxHands()) {
+			this.endGame();
+		}
 	}
 
 	private disableWhile(callback) {
-		this.canDoAction = false;
+		this.state.canDoAction = false;
 		var ret = callback();
-		this.canDoAction = true;
+		this.state.canDoAction = true;
 
 		return ret;
 	}

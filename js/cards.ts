@@ -135,12 +135,7 @@ module Cards {
 			if (side === 'back') {
 				this.container = $('<div data-id="'+ this.id +'" class="card back"></div>');
 			} else {
-				var cardValue =
-					( value == 1 ) ? 'A' :
-					( value == 11 ) ? 'J' :
-					( value == 12 ) ? 'Q' :
-					( value == 13 ) ? 'K' :
-					value,
+				var cardValue = this.valueToString(),
 				cardIcon  =
 					( type == 'hearts' ) ? '♥' :
 					( type == 'diamonds' ) ? '♦' :
@@ -163,6 +158,21 @@ module Cards {
 					$('<div data-id="'+ this.id  +'" class="card value'+cardValue+
 					  ' '+type+'">'+corner+'<div class="icons">'+icons+
 					  '</div>'+corner+'</div>');
+			}
+		}
+
+		valueToString () {
+			return (( this.value == 1 ) ? 'A' :
+					( this.value == 11 ) ? 'J' :
+					( this.value == 12 ) ? 'Q' :
+					( this.value == 13 ) ? 'K' :
+					String(this.value));
+		}
+
+		prettify() {
+			return {
+				"Suit": this.type,
+				"Rank": this.valueToString()
 			}
 		}
 
