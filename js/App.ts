@@ -166,8 +166,9 @@ class App {
 
 	private addCard(side, toAdd:Players.AbstractPlayer, callback){
 		// var cardData  = this.cards[this.cardsIndex];
-		var cardData = this.deck.getCurrent();
-		var newCard = new Cards.Card(this.deck.currentIndex, cardData.type, cardData.card, side);
+		var cardData = this.deck.dealNew();
+		var newCard = new Cards.Card(cardData.type, cardData.card, side,
+									this.deck.currentIndex);
 
 		// var toAdd = (player === 'player') ?
 		// 	this.player :
@@ -211,7 +212,7 @@ class App {
 		// this.initDeck();
 
 		this.player.changeBankroll(-1);
-		this.disableWhile(() => this.ditributeCards());
+		this.disableWhile(() => this.distributeCards());
 		this.gameDealed = true;
 	}
 
@@ -246,7 +247,8 @@ class App {
 	private _stand()
 	{
 		this.isStanding = true;
-		this.revealDealerCard();
+		// this.revealDealerCard();
+		this.dealer.reveal();
 
 		setTimeout( () => {
 			if ( this.dealer.getScore() < 17 ) this.dealerTurn();
@@ -271,7 +273,6 @@ class App {
 	private dealerTurn()
 	{
 		this.addCard('front', this.dealer, () => {
-			// this.dealerTotal.html(String(this.calculateDealerScore()));
 			this.dealer.displayScore();
 
 			if (this.dealer.getScore() < 17) this.dealerTurn();
@@ -284,23 +285,21 @@ class App {
 	private push( msg )
 	{
 		this.showMessage(msg);
-		var increment = ( this.player.doubled ) ? 2 : 1;
-		this.player.changeBankroll(increment);
+		this.player.push();
 		this.stopGame();
 	}
 
 	private win( msg )
 	{
 		this.showMessage(msg);
-		var increment = ( this.player.doubled ) ? 4 : 2;
-		this.player.changeBankroll(increment);
+		this.player.win();
 		this.stopGame();
 	}
 
 	private lose( msg )
 	{
 		this.showMessage(msg);
-		this.player.changeBankroll(0);
+		this.player.lose();
 		this.stopGame();
 	}
 
@@ -327,6 +326,7 @@ class App {
         default: content = '<span>Something broke, don’t know what happened...</span>'; break;
 		}
 
+		msg.innerHTML = content;
 		this.player.cardsContainer.after(msg);
 	}
 
@@ -394,7 +394,7 @@ class App {
 		return ret;
 	}
 
-	private ditributeCards()
+	private distributeCards()
 	{
 		this.addCard('front', this.player, () => {
 			this.addCard('front', this.dealer, () => {
@@ -413,107 +413,16 @@ class App {
 
 	private checkBlackjack()
 	{
-		var pScore  = this.player.getScore(),
-        dScore  = this.dealer.getScore();
+		var pHas  = this.player.checkBlackjack(),
+        dHas  = this.dealer.checkBlackjack();
 
-		if ( pScore == 21 && dScore == 21 ) this.push('Push - No winner');
-		else if ( pScore == 21 ) this.win('win-blackjack');
-		else if ( dScore == 21 ) {
+		if (pHas && dHas) this.push('Push - No winner');
+		else if (pHas) this.win('win-blackjack');
+		else if (dHas) {
 			this.lose('lose-blackjack');
-			this.revealDealerCard();
+			this.dealer.reveal();
 		}
 	}
-
-	//  Player management
-	// private addToPlayerTotal( value )
-	// {
-	// 	// if ( value == 1 ) {
-	// 	// 	value = 11;
-	// 	// 	this.playerAces++;
-	// 	// }
-
-	// 	this.playerCards.push(value);
-	// 	this.playerTotal.html(String(this.calculatePlayerScore()));
-    // }
-
-	// private calculatePlayerScore()
-	// {
-	// 	var score = this.playerCards.sum();
-
-	// 	// if ( score > 21 && this.playerAces > 0 ) {
-	// 	// 	this.playerCards.splice(this.playerCards.indexOf(11), 1, 1);
-	// 	// 	this.playerAces--;
-	// 	// 	score = calculatePlayerScore();
-	// 	// }
-
-	// 	return score;
-	// }
-
-	//  Dealer management
-	private revealDealerCard()
-	{							// FIXME: use "flipped" here
-		var card    = $('.back'),
-        id      = card.data('id'),
-        data    = this.deck.getCurrent(),
-        newCard = new Cards.Card(id, data.type, data.value, 'front');
-
-		newCard.setCss({
-			'left' : 10 * card.index() + '%',
-			'z-index' : 50-card.index()
-		});
-
-		card.after(newCard.container).remove();
-		this.dealer.displayScore();
-		// this.dealerTotal.html(String(this.calculateDealerScore()));
-	}
-
-	private addToDealerTotal( value )
-	{
-		// if ( value == 1 ) {
-		// 	value = 11;
-		// 	this.dealerAces++;
-		// }
-
-		// this.dealerCards.push(value);
-	}
-
-	private calculateDealerScore()
-	{
-		var score = this.dealer.getScore();
-
-		// if ( score > 21 && this.dealerAces > 0 ) {
-		// 	this.dealerCards.splice(this.dealerCards.indexOf(11), 1, 1);
-		// 	this.dealerAces--;
-		// 	score = this.calculateDealerScore();
-		// }
-
-		return score;
-	}
-
-	//  Bet management
-	// private initBet()
-	// {
-	// 	this.allChips.bind('click', (e) => {
-	// 		var chip = $(this);
-	// 		if ( this.isPlaying || chip.hasClass('desactivate') ) return;
-
-	// 		this.allChips.removeClass('bet');
-	// 		chip.addClass('bet');
-	// 		this.changeBet(chip.data('value'));
-
-	// 		this.chips.prepend(chip);
-	// 	});
-	// }
-
-	// private changeBet( newValue ) {
-	// 	if ( this.isPlaying ) return;
-	// 	this.currentBet = newValue;
-	// }
-
-	// private changeBankroll( increment ) {
-	// 	this.bank += increment * this.currentBet;
-	// 	this.bankroll.html((this.bank / 10) + 'k');
-	// }
 }
 
 /*

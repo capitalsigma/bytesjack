@@ -1,5 +1,8 @@
-module Players {
+/// <reference path='../libs/jquery.d.ts'/>
+/// <reference path='./cards.ts'/>
+/// <reference path='./globals.ts'/>
 
+module Players {
 	export class AbstractPlayer {
 		private hand:Cards.Hand;
 		isDealer:boolean = undefined;
@@ -39,7 +42,7 @@ module Players {
 			// card      = this.buildCard(this.cardsIndex, cardData.type, cardData.card, side),
 			var zIndex:number;
 
-			this.hand.push(card.value);
+			this.hand.push(card);
 			// this.cardsIndex++;
 			// this.canDoAction = false;
 
@@ -102,7 +105,6 @@ module Players {
 				throw new Error("Not implemented error");
 			}
 
-			console.log("Cards rotating");
 			var cards = this.cardsContainer.children('.card'),
 			numCards  = cards.length - 1,
 			increment = ( isDealer ) ? 1 : -1,
@@ -131,6 +133,14 @@ module Players {
 			});
 		}
 
+		checkBlackjack() {
+			return this.getScore() === 21;
+		}
+
+		lastCard():Cards.Card {
+			return this.hand.lastCard();
+		}
+
 	}
 
 	export class Dealer extends AbstractPlayer {
@@ -152,6 +162,20 @@ module Players {
 
 		rotateCards() {
 			super.rotateCards(true);
+		}
+
+		reveal() {
+			var card    = $('.back'),
+			oldCard = this.lastCard(),
+			newCard = oldCard.getFlipped();
+
+			newCard.setCss({
+				'left' : 10 * card.index() + '%',
+				'z-index' : 50-card.index()
+			});
+
+			oldCard.container.after(newCard.container).remove();
+			this.displayScore();
 		}
 
 	}
@@ -189,6 +213,18 @@ module Players {
 
 		changeBet(toValue) {
 			this.betSize = toValue;
+		}
+
+		win() {
+			this.changeBankroll(this.doubled ? 4 : 2);
+		}
+
+		lose() {
+			this.changeBankroll(0);
+		}
+
+		push() {
+			this.changeBankroll(this.doubled ? 2 : 1);
 		}
 
 	}

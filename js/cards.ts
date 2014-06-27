@@ -1,5 +1,7 @@
+/// <reference path='../libs/jquery.d.ts'/>
+
 module Cards {
-	export class CardCollection {
+	class SummableArray {
 		private members: Array<number>;
 
 		constructor() {
@@ -25,26 +27,38 @@ module Cards {
 		count () {
 			return this.members.length;
 		}
+
+		top () {
+			return this.members[this.members.length - 1];
+		}
 	}
 
-	export class Hand extends CardCollection {
+	export class Hand  {
 		private hasAce: boolean;
+		private cards:Array<Card>;
+		private values:SummableArray;
 
 		constructor() {
 			this.hasAce = false;
-			super();
+			this.values = new SummableArray();
+			this.cards = new Array<Card>();
 		}
 
-		push(value: number) {
-			if (value === 1) {
+		push(card:Card) {
+			if (card.value === 1) {
 				this.hasAce = true;
 			}
-			super.push(value);
+			this.values.push(card.value > 10 ? 10 : card.value);
+			this.cards.push(card);
 		}
 
 		sum() {
-			var nonAce = super.sum();
+			var nonAce = this.values.sum();
 			return nonAce + (this.hasAce && nonAce <= 10 ? 10 : 0);
+		}
+
+		lastCard() {
+			return this.cards[this.cards.length - 1];
 		}
 
 	}
@@ -111,10 +125,15 @@ module Cards {
 
 	export class Card {
 		public container:JQuery;
+		static currentId = 0;
 
-		constructor(private id, private type, public value, private side) {
+		constructor(public type, public value, private side, public id?) {
+			if (this.id === undefined) {
+				this.id = Card.currentId++;
+			}
+
 			if (side === 'back') {
-				this.container = $('<div data-id="'+id+'" class="card back"></div>');
+				this.container = $('<div data-id="'+ this.id +'" class="card back"></div>');
 			} else {
 				var cardValue =
 					( value == 1 ) ? 'A' :
@@ -141,7 +160,7 @@ module Cards {
 						( value == 13 ) ? '<span>♚</span>' : '';
 				}
 				this.container =
-					$('<div data-id="'+id+'" class="card value'+cardValue+
+					$('<div data-id="'+ this.id  +'" class="card value'+cardValue+
 					  ' '+type+'">'+corner+'<div class="icons">'+icons+
 					  '</div>'+corner+'</div>');
 			}
@@ -161,7 +180,7 @@ module Cards {
 				throw new Error("No such card side");
 			}
 
-			return new Card(this.id, this.type, this.value, newSide);
+			return new Card(this.type, this.value, newSide, this.id);
 		}
 
 		index() {
