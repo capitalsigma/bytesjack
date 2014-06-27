@@ -51,7 +51,7 @@ var Cards;
 
         Hand.prototype.sum = function () {
             var nonAce = this.values.sum();
-            return nonAce + (this.hasAce && nonAce <= 10 ? 10 : 0);
+            return nonAce + (this.hasAce && nonAce <= 11 ? 10 : 0);
         };
 
         Hand.prototype.lastCard = function () {
@@ -217,6 +217,11 @@ var Cards;
 
         Card.prototype.index = function () {
             return this.container.index();
+        };
+
+        Card.prototype.toJSON = function () {
+            this.container = undefined;
+            return this;
         };
         Card.currentId = 0;
         return Card;
@@ -486,6 +491,30 @@ var Context;
         function HandHistory() {
             this.actions = new Array();
         }
+        HandHistory.prototype.actionToString = function (act) {
+            switch (act) {
+                case 0 /* Hit */:
+                    return "Hit";
+                    break;
+
+                case 1 /* Stand */:
+                    return "Stand";
+                    break;
+
+                case 2 /* Double */:
+                    return "Double";
+                    break;
+            }
+        };
+
+        HandHistory.prototype.toJSON = function () {
+            var _this = this;
+            this.actionsTaken = this.actions.map(function (x) {
+                return _this.actionToString(x);
+            });
+            this.actions = undefined;
+            return this;
+        };
         return HandHistory;
     })();
     Context.HandHistory = HandHistory;
@@ -524,6 +553,11 @@ var Context;
             this.currentHandHistory = new HandHistory();
         }
         StateManager.prototype.withCheck = function (callback) {
+            // console.log("checking: ");
+            // ["isPlaying", "canDoAction", "isStanding", "gameEnded"].map( (prop) => {
+            // 	console.log("this." + prop + " = " + this[prop]);
+            // 	return ""
+            // });
             if (!this.isPlaying || !this.canDoAction || this.isStanding || this.gameEnded) {
                 return;
             } else {
@@ -576,24 +610,8 @@ var Context;
             return this.deckManager.newDeck(this.currentHandIndex);
         };
 
-        StateManager.prototype.actionToString = function (act) {
-            switch (act) {
-                case 0 /* Hit */:
-                    return "Hit";
-                    break;
-
-                case 1 /* Stand */:
-                    return "Stand";
-                    break;
-
-                case 2 /* Double */:
-                    return "Double";
-                    break;
-            }
-        };
-
         StateManager.prototype.atMaxHands = function () {
-            return this.maxHands < this.currentHandIndex;
+            return this.maxHands <= this.currentHandIndex;
         };
 
         StateManager.prototype.historyToString = function () {
@@ -638,7 +656,7 @@ var App = (function () {
     function App() {
         var _this = this;
         //  Constants
-        this.MAX_TURNS = 5;
+        this.MAX_TURNS = 10;
         this.KEY_SPACE = 32;
         this.KEY_S = 83;
         this.KEY_D = 68;
@@ -663,16 +681,16 @@ var App = (function () {
         this.isSafari = this.html.attr('browser') === 'Safari';
         this.dealer = new Players.Dealer($('#dealer-cards'), $('#dealer-total'), this.isSafari);
         this.player = new Players.Player($('#player-cards'), $('#player-total'), this.isSafari, $('#bankroll'));
+        // hands count from zero
         this.deckManager = new Context.DeckManager({
             "default": function () {
                 return new Cards.RealisticDeck();
             },
-            "1": function () {
+            "4": function () {
                 return new Cards.RiggedDeck({
-                    "0": 1,
-                    "1": 1,
-                    "2": 1,
-                    "3": 1
+                    "0": 10,
+                    "1": 7,
+                    "2": 6
                 });
             } });
         this.state = new Context.StateManager(this.MAX_TURNS, $('#left-text'), this.deckManager);
@@ -712,8 +730,7 @@ var App = (function () {
         $('#chart').on('click', function () {
             var toShow = $(this).attr('src');
 
-            console.log("got " + toShow);
-
+            // console.log("got " + toShow);
             $('#modalImg').attr('src', toShow);
             $('#myModal').modal('show');
         });
@@ -746,7 +763,8 @@ var App = (function () {
 
             _this.allChips.removeClass('bet');
             chip.addClass('bet');
-            console.log("Trying to change bet to " + String(chip.data('value')));
+
+            // console.log("Trying to change bet to " + String(chip.data('value')));
             _this.player.changeBet(chip.data('value'));
 
             _this.chips.prepend(chip);
@@ -1068,13 +1086,16 @@ var App = (function () {
     App.prototype.disableWhile = function (callback) {
         this.state.canDoAction = false;
         var ret = callback();
-        this.state.canDoAction = true;
 
+        // need to do this in checkBlackjack
+        // this.state.canDoAction = true;
         return ret;
     };
 
     App.prototype.distributeCards = function () {
+        // this.state.canDoAction = false;
         var _this = this;
+        // console.log("distributing cards");
         this.addCard('front', this.player, function () {
             _this.addCard('front', _this.dealer, function () {
                 _this.addCard('front', _this.player, function () {
@@ -1085,6 +1106,7 @@ var App = (function () {
             });
         });
 
+        // this.state.canDoAction = true;
         this.dealNav.hide();
         this.actionsNav.show();
         this.chips.addClass('disabled');
@@ -1101,6 +1123,8 @@ var App = (function () {
             this.lose('lose-blackjack');
             this.dealer.reveal();
         }
+
+        this.state.canDoAction = true;
     };
     return App;
 })();

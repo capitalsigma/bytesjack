@@ -245,7 +245,7 @@ module Cards {
 		}
 
 		toJSON() {				// hack
-			this.container = null;
+			this.container = undefined;
 			return this;
 		}
 	}
