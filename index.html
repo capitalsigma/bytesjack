@@ -9,26 +9,38 @@
 
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/typekit.css" />
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- <script type="text/javascript" src="http://use.typekit.com/ovn6yje.js"></script> -->
     <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
   </head>
   <body>
+
     <a id="github-ribbon" href="https://github.com/heliom/bytesjack"><img style="z-index: 1; position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
     <script>if(navigator.standalone)document.querySelector('#github-ribbon').style.display='none'</script>
+
+
     <div id="game">
-      <h1>BytesJack</h1>
+
+	  <div id="view-chart">
+		<a href="#" rel="tooltip" title="Click To View" data-toggle="tooltip"
+		   data-placement="bottom" id="chart-tooltip">
+		  <img src="./resources/chart.jpg" class="img-responsive" id="chart">
+		</a>
+	  </div>
+
+
+      <h1 >Rounds remaining <div id="left-text"> 5 </div></h1>
       <div id="dealer-cards">
       </div>
 
       <div id="ui">
-
         <div class="total">Dealer <span id="dealer-total"></span></div>
 
         <div class="zone">
-          <span class="label">Your Bytes</span>
+          <span class="label">Your Bankroll</span>
           <span class="label right">Your Bet</span>
-          <div id="bankroll">10k</div>
+          <div id="bankroll">100</div>
           <div id="deal"><a href="#" onclick="App.deal();">Deal</a><span class="shortcut">spacebar</span></div>
           <ul id="actions">
             <li><a href="#" onclick="App.hit();">Hit</a><span class="shortcut">spacebar</span></li>
@@ -36,9 +48,9 @@
             <li><a id="double" href="#" onclick="App.doubledown();">Double</a><span class="shortcut">d</span></li>
           </ul>
           <div id="chips">
-            <div class="chip bet red" data-value="1"><span>100b</span></div>
-            <div class="chip blue" data-value="5"><span>500b</span></div>
-            <div class="chip yellow" data-value="10"><span>1k</span></div>
+            <div class="chip bet red" data-value="1"><span>10</span></div>
+            <div class="chip blue" data-value="5"><span>5</span></div>
+            <div class="chip yellow" data-value="10"><span>1</span></div>
           </div>
         </div>
 
@@ -51,5 +63,6 @@
 
     <script defer type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.6.2.min.js"></script>
     <script defer type="text/javascript" src="js/App.js" ></script>
+	<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   </body>
 </html>

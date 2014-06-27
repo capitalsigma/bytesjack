@@ -3,10 +3,12 @@
  */
 
 /// <reference path='../libs/jquery.d.ts'/>
+/// <reference path='../libs/bootstrap.d.ts'/>
 /// <reference path='./players.ts'/>
 /// <reference path='./cards.ts'/>
 /// <reference path='./globals.ts'/>
 /// <reference path='./context.ts'/>
+
 
 
 interface Window {

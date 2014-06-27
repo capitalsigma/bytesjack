@@ -1,5 +1,29 @@
 @import "utils";
 
+
+// DRL Extras
+  #view-chart {
+    height: 30%;
+    width: auto;
+
+    #chart {
+      position: absolute;
+
+      width: auto;
+      height: 30%;
+      z-index: 1;
+      }
+
+      #chart-tooltip {
+        display: inline-block;
+//        data-toggle:"tooltip";
+//        data-placement:"bottom";
+//        title:"Click to view";
+        }
+  }
+
+
+
 // Utils ----------------------------------------------
 * { margin: 0; padding: 0; }
 body, html { width: 100%; height: 100%;
@@ -7,9 +31,10 @@ body, html { width: 100%; height: 100%;
 }
 .desactivate { opacity: 0.2; }
 
+
 // Game -----------------------------------------------
 #game {
-  background-color: #466d19; 
+  background-color: #466d19;
   @include gradient-radial(#65981e, #184d08);
   overflow: hidden;
   position: relative;
@@ -45,6 +70,10 @@ body, html { width: 100%; height: 100%;
   margin: -6.5% 0 0 0;
   clear: both;
   color: #dce4c9;
+  z-index: 1;
+
+  //  $alpha: .3; (Old version)
+  $alpha:.3;
 
   .zone {
     position: relative;
@@ -52,25 +81,25 @@ body, html { width: 100%; height: 100%;
     left: -50%;
     height: 45%; max-height: 110px; min-height: 90px;
     border: 9px solid #809d29;
-    border-color: rgba(208,209,78,0.3);
+    border-color: rgba(208,209,78,$alpha);
     padding: 2%;
     @include rounded(30px);
-    
+
     div, ul {
       width: 20%;
     }
-    
+
     .label {
       position: absolute;
       top: -37px; left: 5%;
       font-size: 0.9em;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: rgba(208,209,78,0.3);
-      
+      color: rgba(208,209,78,$alpha);
+
       &.right { left: auto; right: 5%; }
     }
-    
+
     #bankroll {
       position: absolute;
       top: 50%; left: 0;
@@ -85,7 +114,7 @@ body, html { width: 100%; height: 100%;
       margin: auto;
       text-align: center;
       list-style: none;
-      
+
        a, li a {
           background-color: #ffe000;
           position: relative;
@@ -97,20 +126,21 @@ body, html { width: 100%; height: 100%;
           text-decoration: none;
           text-shadow: 0 1px 0px rgba(255,255,255,0.3), 0px -1px 0px rgba(0,0,0,0.2);
           @include box-shadow(#{
-              inset 0px 2px 0 rgba(255,255,255,0.3), 
-              inset 0px -2px 0 rgba(255,255,255,0.1), 
-              0px 5px 0px 0px #daa206, 
-              0px 5px 0px 2px rgba(0,0,0,0.2)});
+              inset 0px 2px 0 rgba(255,255,255,$alpha),
+              inset 0px -2px 0 rgba(255,255,255,0.1),
+              //inset 0px -2px 0 rgba(255,255,255,$alpha),
+              0px 5px 0px 0px #daa206,
+              0px 5px 0px 2px rgba(0,0,0,1)});
           @include rounded(12px);
           @include transition(#{box-shadow 150ms ease-out});
-          
+
           &:hover, &:focus { @include box-shadow(#{inset 0px 2px 0 rgba(255,255,255,0.3), inset 0px -2px 0 rgba(255,255,255,0.1), 0px 5px 0px 0px #daa206, 0px 5px 0px 2px rgba(0,0,0,0.2), 0 0 30px rgba(255,246,0,0.8)}); };
           &:active, &.active {
             top: 2px;
             @include box-shadow(#{
-              inset 0px 2px 0 rgba(255,255,255,0.3), 
-              inset 0px -2px 0 rgba(255,255,255,0.1), 
-              0px 3px 0px 0px #daa206, 
+              inset 0px 2px 0 rgba(255,255,255,0.3),
+              inset 0px -2px 0 rgba(255,255,255,0.1),
+              0px 3px 0px 0px #daa206,
               0px 3px 0px 2px rgba(0,0,0,0.2)});
           }
         }
@@ -123,9 +153,9 @@ body, html { width: 100%; height: 100%;
           color: #aaa395;
           text-shadow: 0 1px 0px rgba(255,255,255,0.2), 0px -1px 0px rgba(0,0,0,0.1);
           @include box-shadow(#{
-              inset 0px 2px 0 rgba(255,255,255,0.4), 
-              inset 0px -2px 0 rgba(255,255,255,0.1), 
-              0px 5px 0px 0px #898367, 
+              inset 0px 2px 0 rgba(255,255,255,0.4),
+              inset 0px -2px 0 rgba(255,255,255,0.1),
+              0px 5px 0px 0px #898367,
               0px 5px 0px 2px rgba(0,0,0,0.2)});
         }
 
@@ -141,7 +171,7 @@ body, html { width: 100%; height: 100%;
         }
       }
     } // #zone
-     
+
     .total {
       position: relative;
       left: -12.5%;
@@ -161,19 +191,19 @@ body, html { width: 100%; height: 100%;
       @include rounded( 0 0 9px 9px);
       padding: 0.5em 0 0.75em 0;
     }
-  
+
     #chips {
       position: absolute;
       width: 0;
       top: 0;
       right: 0;
-    
+
       .chip { position: absolute; top: 0; left: 0; @include transition(all 250ms ease-out); }
       .chip:nth-child(1) { left: auto; right: 10px; &::before{ display: none; } }
       .chip:nth-child(2) { left: 10px; top: -70px; &::before{ top: -25%; } }
       .chip:nth-child(3) { left: 10px; top: 70px; &::before{ top: 115%; } }
     }
-  
+
     #chips.disabled { .chip:nth-child(2), .chip:nth-child(3) { opacity: 0; } }
     #actions { display: none; }
   }
@@ -183,7 +213,7 @@ body, html { width: 100%; height: 100%;
     width: 100%; height: 460px;
     -webkit-transform: translate3d(0,0,0);
     @include transition(all 200ms ease-out);
-    
+
     .card {
       -webkit-backface-visibility: hidden;
       background-color: #f9f9f9;
@@ -195,14 +225,14 @@ body, html { width: 100%; height: 100%;
       &.back {
           background-color: #fd4000;
           @include box-shadow(#{inset 0 0 50px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,15,0.3), 0 0 5px rgba(0,0,15,0.1)});
-          background: #fd4000 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAKCAYAAACJxx+AAAAATElEQVQYGWP4/9XN+P///wy4MEQClyKgOEInuiIoH6EAZA1MEYwGiqEqQFYEdRcTAwFAUAGqFTC7YTSKG5AEwWEC5UNMQJeEOhDkKwDfGrdliFgHkAAAAABJRU5ErkJggg==');  
+          background: #fd4000 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAKCAYAAACJxx+AAAAATElEQVQYGWP4/9XN+P///wy4MEQClyKgOEInuiIoH6EAZA1MEYwGiqEqQFYEdRcTAwFAUAGqFTC7YTSKG5AEwWEC5UNMQJeEOhDkKwDfGrdliFgHkAAAAABJRU5ErkJggg==');
       }
     }
   }
   #dealer-cards .card > .icons {
     @include rotate(180deg);
   }
-  
+
   #dealer-cards { top: -200px;
     .card {
        @include gradient-top-bottom(#edeae6, #f9f9f9);
@@ -226,9 +256,9 @@ body, html { width: 100%; height: 100%;
   line-height: 1;
   text-align: center;
   text-shadow:
-      0px 2px 0px #daa206, 
+      0px 2px 0px #daa206,
       0px 1px 6px rgba(0,0,0,0.1);
-      
+
   span {
     display: block;
     clear: both;
@@ -241,7 +271,7 @@ body, html { width: 100%; height: 100%;
     text-shadow: 0 1px 4px rgba(0,0,0,0.1);
   }
   -webkit-animation: fadeIn3d 1000ms ease-in-out;
-  
+
   &.game-over {
     bottom: 45%;
     -webkit-animation: fadeIn3d 1000ms ease-in-out;
@@ -251,7 +281,7 @@ body, html { width: 100%; height: 100%;
   color: #f14700;
   text-shadow:
       0 -1px 0px #f36c30,
-      0px 2px 0px #cf3600, 
+      0px 2px 0px #cf3600,
       0px 4px 21px rgba(60,47,41,0.17);
     span {
       color: #3c2f29;
@@ -272,7 +302,7 @@ body, html { width: 100%; height: 100%;
 }
 @-webkit-keyframes messageFade {
     0%      { opacity: 0; /*letter-spacing: 0em;*/ }
-    10%     { opacity: 1; }    
+    10%     { opacity: 1; }
     70%     { opacity: 1; }
     100%    { opacity: 0; /*letter-spacing: 0.6em;*/ }
 }
@@ -290,81 +320,81 @@ body, html { width: 100%; height: 100%;
   float: left;
   margin: 0 10px 0 0;
   padding: 4px;
-	background-color: #007cff;
-	position: relative;
-	width: 100px !important;
-	height: 100px;
-	border: 10px dashed #fff;
-	@include box-shadow(#{0 0 0px #0263e6, 0 1px 0px #0263e6, 0 2px 0px #0263e6, 0 3px 0px #0263e6, 0 4px 0px #0263e6, 0 -1px 0px #01afff, 0 4px 9px rgba(0,0,0,0.2)});
-	@include noselect();
-	@include rounded(100px);
-	@include transition(all 100ms ease-out);
-	
-	&:hover{
+    background-color: #007cff;
+    position: relative;
+    width: 100px !important;
+    height: 100px;
+    border: 10px dashed #fff;
+    @include box-shadow(#{0 0 0px #0263e6, 0 1px 0px #0263e6, 0 2px 0px #0263e6, 0 3px 0px #0263e6, 0 4px 0px #0263e6, 0 -1px 0px #01afff, 0 4px 9px rgba(0,0,0,0.2)});
+    @include noselect();
+    @include rounded(100px);
+    @include transition(all 100ms ease-out);
+
+    &:hover{
     @include rotate(5deg);
-	}
-	span {
-		display: block;
-		width: 100%;
-		height: 100%;
-		color: #fff;
-		font-size: 2em;
-		line-height: 102px;
-		text-align: center;
-		text-shadow: 0 -1px 0px rgba(0,0,0,0.3);
-		background-color: #0261f1;
-		@include rounded(100px);
+    }
+    span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        color: #fff;
+        font-size: 2em;
+        line-height: 102px;
+        text-align: center;
+        text-shadow: 0 -1px 0px rgba(0,0,0,0.3);
+        background-color: #0261f1;
+        @include rounded(100px);
     @include gradient-top-bottom(#037ff4, #0274f3);
     @include box-shadow(#{0 0 0 3px #0277f4, 0 -1px 0 3px #0265f1, 0 1px 0 3px #008dff, inset 0 1px 1px #0784ff, inset 0 -1px 0px #0261f1});
-	}
-	
-	&::before {
-	  position: absolute;
+    }
+
+    &::before {
+      position: absolute;
     color: #77a421;
     font-size: 0.65em;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     left: 49%;
-	}
-	
+    }
+
 }
 
 .chip.blue {
   background-color: #007cff;
   @include box-shadow(#{0 0 0px #0263e6, 0 1px 0px #0263e6, 0 2px 0px #0263e6, 0 3px 0px #0263e6, 0 4px 0px #0263e6, 0 -1px 0px #01afff, 0 3px 9px rgba(0,0,0,0.2)});
-  
+
   span {
     background-color: #0261f1;
     @include gradient-top-bottom(#037ff4, #0274f3);
     @include box-shadow(#{0 0 0 3px #0277f4, 0 -1px 0 3px #0265f1, 0 1px 0 3px #008dff, inset 0 1px 1px #0784ff, inset 0 -1px 0px #0261f1});
   }
-  
+
   &::before { content: '2'; }
 }
 
 .chip.red {
   background-color: #f54800;
   @include box-shadow(#{0 0 0px #de2e04, 0 1px 0px #de2e04, 0 2px 0px #de2e04, 0 3px 0px #de2e04, 0 4px 0px #de2e04, 0 -1px 0px #ff6d02, 0 3px 9px rgba(0,0,0,0.2)});
-  
+
   span {
     background-color: #eb4603;
     @include gradient-top-bottom(#ef4d00, #ed4300);
     @include box-shadow(#{0 0 0 3px #eb4503, 0 -1px 0 3px #de3400, 0 1px 0 3px #ff5100, inset 0 1px 1px #fd5410, inset 0 -1px 0px #de3400});
   }
-  
+
   &::before { content: '1'; }
 }
 
 .chip.yellow {
   background-color: #f3cf00;
   @include box-shadow(#{0 0 0px #cdaf00, 0 1px 0px #cdaf00, 0 2px 0px #cdaf00, 0 3px 0px #cdaf00, 0 4px 0px #cdaf00, 0 -1px 0px #fddc00, 0 3px 9px rgba(0,0,0,0.2)});
-  
+
   span {
     background-color: #ebc700;
     @include gradient-top-bottom(#ecc300, #ebcd00);
     @include box-shadow(#{0 0 0 3px #eec900, 0 -1px 0 3px #ceaf00, 0 1px 0 3px #e9dc00, inset 0 1px 1px #e9dc00, inset 0 -1px 0px #ceaf00});
   }
-  
+
   &::before { content: '3'; }
 }
 
@@ -378,31 +408,31 @@ body, html { width: 100%; height: 100%;
   width: 300px; height: 460px;
   border-radius: 20px;
   @include noselect();
-  
-  
+
+
   div {
     position: absolute;
     &:first-child { top: 2%; left: 5%; }
     &:last-child { bottom: 2%; right: 5%; @include rotate(180deg); }
-    
+
     span {
       text-align: center;
       display: block;
     }
-    
+
     .icons {
       position: absolute;
       top: 0; left: 0;
       width: 1px; height: 1px;
-      
+
       & > div { position: relative; }
     }
   }
-  
+
   .icons {
     position: absolute;
     top: 50%; left: 50%;
-    
+
     span { position: absolute; font-size: 4em; left: -26px; }
   }
 }
@@ -477,7 +507,7 @@ html[browser="Safari"] {
   #game #ui .zone #deal li, #game #ui .zone #actions li {
     margin: 0 2%;
   }
-  
+
   #message { bottom: 0; @include translate3d(#{0,-75px,0}); }
 }
 
@@ -536,43 +566,43 @@ html[os="iPhone/iPod"] {
   #game {
     .chip {
       padding: 4px;
-    	width: 80px !important;
-    	height: 80px;
-    	
-    	span {
-    		font-size: 1.5em;
-    		line-height: 82px;
-    	}
-  	}
+        width: 80px !important;
+        height: 80px;
+
+        span {
+            font-size: 1.5em;
+            line-height: 82px;
+        }
+    }
   }
 }
 
 @media screen and (max-width: 768px) { // New #zone layout
   #game {
-    
+
     h1 {
       margin: 10% auto 0 auto;
     }
-    
+
     #ui {
-      width: 95%; 
+      width: 95%;
       height: 40%; max-height: 500px;
-      
+
       top: 35%;
-      
+
       .zone {
         height: 66%; max-height: 300px;
         @include rounded(21px);
-        
+
         .label { top: -30px; }
-        
+
         #deal, #actions {
           position: absolute;
           top: auto;
           bottom: 10%;
           width: 96%;
           height: auto;
-          
+
         }
         .shortcut {
           display: none;
@@ -582,16 +612,16 @@ html[os="iPhone/iPod"] {
           margin: 4%;
         }
       } //.zone
-      
+
       #chips {
         width: auto;
         top: 10px; right: 2px;
-        
+
         .chip {
           float: none;
           opacity: 0.35;
           top: 0 !important; left: auto !important;
-          
+
           &::before { display: none; }
           &.bet { opacity: 1; }
           &.red { right: 236px; }
@@ -606,30 +636,30 @@ html[os="iPhone/iPod"] {
 @media screen and (max-width: 768px) and (max-height: 825px) {
   #game {
     font-size: 12px;
-    
+
     #ui .zone #chips .chip {
       padding: 4px;
-    	width: 50px !important;
-    	height: 50px;
-    	margin: 3px;
-    	border: 4px dashed #fff;
-    	
-    	span {
-    		font-size: 1.4em;
-    		line-height: 52px;
-    	}
-    	
-    	&.red { right: 145px; }
+        width: 50px !important;
+        height: 50px;
+        margin: 3px;
+        border: 4px dashed #fff;
+
+        span {
+            font-size: 1.4em;
+            line-height: 52px;
+        }
+
+        &.red { right: 145px; }
       &.blue { right: 72px; }
       &.yellow { right: 0px; }
-  	}
+    }
   }
 }
 
 @media screen and (max-width: 575px) {
   #game {
     font-size: 12px;
-    
+
     #ui {
       .zone {
         #bankroll {
@@ -637,23 +667,23 @@ html[os="iPhone/iPod"] {
         }
       }
     }
-    
+
     #ui .zone #chips .chip {
       padding: 4px;
-    	width: 30px !important;
-    	height: 30px;
-    	border: 3px dashed #fff;
-    	
-    	span {
-    		font-size: 1em;
-    		line-height: 32px;
-    	}
-    	
-    	&.red { right: 98px; }
+        width: 30px !important;
+        height: 30px;
+        border: 3px dashed #fff;
+
+        span {
+            font-size: 1em;
+            line-height: 32px;
+        }
+
+        &.red { right: 98px; }
       &.blue { right: 49px; }
       &.yellow { right: 0px; }
-  	}
-  	
+    }
+
     .card {
       font-size: 1.5em;
       position: relative;
@@ -670,16 +700,16 @@ html[os="iPhone/iPod"] {
 }
 @media screen and (max-width: 480px) and (max-height: 320px){
   #game {
-  	h1 {
-  	  margin: 2% auto 0 auto;
-  	}
-   
+    h1 {
+      margin: 2% auto 0 auto;
+    }
+
     #ui{
       margin: -15% 0 0 0;
       .zone {
         height: 70%
       }
-    } 
+    }
   }
 }
 
@@ -687,45 +717,45 @@ html[os="iPhone/iPod"] {
   #game {
     min-height: 420px;
     background-image: -webkit-gradient(radial, 50% 50%, 0, 50% 50%, 260, from(#65981e), to(#184d08));
-    
+
     h1 {
       font-size: 4em;
       margin: 2%;
       color: #2b4f05;
     }
-    
+
     #ui {
       margin: -15% 0 0 0;
-      
+
       .zone {
         padding: 1% 2%;
         height: 75%;
         max-height: 160px;
-        
+
         #bankroll {
           top: -3px;
           font-size: 4em;
         }
       }
-      
+
       #chips .chip {
         padding: 4px;
-      	width: 30px !important;
-      	height: 30px;
-      	margin: 3px;
-      	border: 3px dashed #fff;
+        width: 30px !important;
+        height: 30px;
+        margin: 3px;
+        border: 3px dashed #fff;
 
-      	span {
-      		font-size: 1em;
-      		line-height: 30px;
-      	}
+        span {
+            font-size: 1em;
+            line-height: 30px;
+        }
 
-      	&.red { right: 98px; }
+        &.red { right: 98px; }
         &.blue { right: 49px; }
         &.yellow { right: 0px; }
-    	}
+        }
     }
-    
+
     .card {
       font-size: 1.5em;
       position: relative;
