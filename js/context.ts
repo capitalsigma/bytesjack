@@ -18,6 +18,17 @@ module Context {
 		}
 	}
 
+	export class DeckManager {
+		constructor(private riggedMap) { }
+
+		newDeck(index) {
+			if (index in this.riggedMap) {
+				return this.riggedMap[index]();
+			} else {
+				return this.riggedMap['default']();
+			}
+		}
+	}
 
 	export class StateManager {
 		private history:Array<HandHistory>;
@@ -40,7 +51,8 @@ module Context {
 			}
 		}
 
-		constructor(public maxHands, private displayContainer:JQuery) {
+		constructor(public maxHands, private displayContainer:JQuery,
+					private deckManager:DeckManager) {
 			this.history = new Array<HandHistory>();
 			this.currentHandHistory = new HandHistory();
 		}
@@ -89,6 +101,9 @@ module Context {
 			return !(this.isPlaying || this.gameEnded);
 		}
 
+		deckConstructor() {
+			return this.deckManager.newDeck(this.currentHandIndex);
+		}
 
 		actionToString (act:Action) {
 			switch (act) {

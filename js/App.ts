@@ -35,8 +35,6 @@ class App {
 
 	//  Variables
 	types = ['clubs', 'diamonds', 'hearts', 'spades'];
-	deckConstructor = () => { return new Cards.RealisticDeck() };
-	deck = this.deckConstructor();
 	// isPlaying       = false;
 	// gameDealed      = false;
 	dealNav         = $('#deal');
@@ -55,8 +53,20 @@ class App {
 								this.isSafari);
 	player = new Players.Player($('#player-cards'), $('#player-total'),
 								this.isSafari, $('#bankroll'));
-	state = new Context.StateManager(this.MAX_TURNS, $('#left-text'));
+	deckManager = new Context.DeckManager({
+		"default": () => { return new Cards.RealisticDeck(); },
+		"3": () => { return new Cards.RiggedDeck({
+			"1": 1,
+			"2": 1,
+			"3": 1,
+			"4": 1
+		}); }});
 
+	state = new Context.StateManager(this.MAX_TURNS, $('#left-text'),
+				 					 this.deckManager);
+	deckConstructor = () => { return this.state.deckConstructor(); };
+
+	deck = this.deckConstructor();
 
 
 	constructor () {

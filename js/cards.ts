@@ -78,27 +78,7 @@ module Cards {
 
 		constructor() {
 			this.cards = [];
-			this.currentIndex = 0;
-		}
-
-		shuffle():void {
-			for(var j, x, i = this.cards.length; i; j = Math.floor(Math.random() * i)){
-				x = this.cards[--i];
-				this.cards[i] = this.cards[j];
-				this.cards[j] = x;
-			}
-		}
-
-		getCurrent() {
-			throw new Error("This method is abstract.");
-		}
-
-	}
-
-	export class RealisticDeck extends AbstractDeck {
-
-		constructor() {
-			super();
+			this.currentIndex = -1;
 
 			for (var i = 0; i < this.types.length; i++) {
 				for (var j = 1; j <= 13; j++) {
@@ -114,12 +94,65 @@ module Cards {
 			this.shuffle();
 		}
 
+
+		shuffle():void {
+			for(var j, x, i = this.cards.length; i; j = Math.floor(Math.random() * i)){
+				x = this.cards[--i];
+				this.cards[i] = this.cards[j];
+				this.cards[j] = x;
+			}
+		}
+
+		getCurrent() {
+			throw new Error("This method is abstract.");
+		}
+
+		getCardWithValue(value) {
+			for(var i = 0; i < this.cards.length; i++) {
+				if(this.cards[i].value === value) {
+					var ret = this.cards[i];
+					// this.cards = this.cards.splice(i, 1);
+					return ret;
+				}
+			}
+			throw new Error("Should never see this");
+		}
+
+	}
+
+	export class RealisticDeck extends AbstractDeck {
 		getCurrent() {
 			return this.cards[this.currentIndex];
 		}
 
 		dealNew() {
 			return this.cards[++this.currentIndex];
+		}
+	}
+
+	export class RiggedDeck extends AbstractDeck {
+		private currentCard:CardValue = null;
+
+		constructor(private riggedMap) {
+			super();
+		}
+
+		private setRigged(index) {
+			if (index in this.riggedMap) {
+				this.currentCard = this.getCardWithValue(this.riggedMap[index]);
+			} else {
+				this.currentCard = this.cards[index];
+			}
+		}
+
+		getCurrent() {
+			return this.currentCard;
+		}
+
+		dealNew() {
+			this.setRigged(++this.currentIndex);
+
+			return this.currentCard;
 		}
 	}
 
