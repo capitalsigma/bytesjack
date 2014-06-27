@@ -61,6 +61,10 @@ module Cards {
 			return this.cards[this.cards.length - 1];
 		}
 
+		// toStrings() : Array<String> {
+		// 	return this.cards.map((x:Card) => x.prettify());
+		// }
+
 	}
 
 
@@ -207,6 +211,16 @@ module Cards {
 				"Suit": this.type,
 				"Rank": this.valueToString()
 			}
+		}
+
+		toString(): string {
+			var s = '';
+			var pret = this.prettify();
+
+			for (var prop in pret) {
+				s += prop + " : " + pret[prop];
+			}
+			return s;
 		}
 
 		setCss(toSet) {

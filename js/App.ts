@@ -9,7 +9,8 @@
 /// <reference path='./globals.ts'/>
 /// <reference path='./context.ts'/>
 
-
+// TODO: breaks if you hit stand (or whatever) while cards are being dealt
+// TODO: doesn't count "doubled" score correctly sometimes (?)
 
 interface Window {
 	App: App;
@@ -55,11 +56,11 @@ class App {
 								this.isSafari, $('#bankroll'));
 	deckManager = new Context.DeckManager({
 		"default": () => { return new Cards.RealisticDeck(); },
-		"3": () => { return new Cards.RiggedDeck({
+		"1": () => { return new Cards.RiggedDeck({
+			"0": 1,
 			"1": 1,
 			"2": 1,
-			"3": 1,
-			"4": 1
+			"3": 1
 		}); }});
 
 	state = new Context.StateManager(this.MAX_TURNS, $('#left-text'),
@@ -386,6 +387,8 @@ class App {
 		overlay.id = 'overlay';
 
 		$('body').append(overlay);
+
+		this.state.historyToString();
 	}
 
 	private stopGame()

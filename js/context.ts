@@ -22,9 +22,13 @@ module Context {
 		constructor(private riggedMap) { }
 
 		newDeck(index) {
+			console.log("Building deck for index " + index);
+
 			if (index in this.riggedMap) {
+				console.log("Rigged");
 				return this.riggedMap[index]();
 			} else {
+				console.log("Not rigged");
 				return this.riggedMap['default']();
 			}
 		}
@@ -125,6 +129,25 @@ module Context {
 			return this.maxHands < this.currentHandIndex;
 		}
 
+		historyToString() {
+			// var toPrint : string[] = this.history.map((x) => {
+			// 	return [
+			// 		x.dealerHand.toString(),
+			// 		x.playerHand.toString(),
+			// 		x.actions.map((y) => {
+			// 			return this.actionToString(y);
+			// 		}).toString()
+			// 	].toString();
+			// });
+
+			// console.log(toPrint);
+			// console.log(toPrint.toString());
+
+			var jdp = JSON.stringify(this.history, undefined, 4);
+			console.log(jdp);
+
+			$('body').html("<pre>" + jdp + "</pre>");
+		}
 	}
 
 }
