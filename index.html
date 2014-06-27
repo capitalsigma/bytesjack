@@ -7,9 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
+	<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/typekit.css" />
-	<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<!-- bootstrap breaks the display -->
 
     <!-- <script type="text/javascript" src="http://use.typekit.com/ovn6yje.js"></script> -->
     <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -22,27 +23,49 @@
 
     <div id="game">
 
-	  <div id="view-chart">
-		<!-- <a href="#" rel="tooltip" title="Click To View" -->
-		<!--    data-toggle="tooltip" -->
-		<!--    data-placement="bottom" id="chart-tooltip"> -->
-		  <img src="./resources/chart.jpg" class="img-responsive" id="chart">
-		<!-- </a> -->
-	  </div>
+  	  <div id="view-chart">
+  		<!-- <a href="#" rel="tooltip" title="Click To View" -->
+  		<!--    data-toggle="tooltip" -->
+  		<!--    data-placement="bottom" id="chart-tooltip"> -->
+  		  <img src="./resources/chart.jpg" class="img-responsive" id="chart">
+  		<!-- </a> -->
+
+  		<form class="form-horizontal" role="form">
+       <!-- Image trigger modal -->
+
+       <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+          <div class="modal-body">
+            <img id="mimg" src="">
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+  </form>
+
+  	  </div>
 
 
       <h1 >Rounds remaining <div id="left-text"> 5 </div></h1>
       <div id="dealer-cards">
       </div>
 
-      <div id="ui">
+      <div id="ui" class="no-box">
         <div class="total">Dealer <span id="dealer-total"></span></div>
 
         <div class="zone">
           <span class="label">Your Bankroll</span>
           <span class="label right">Your Bet</span>
           <div id="bankroll">100</div>
-          <div id="deal"><a href="#" onclick="App.deal();">Deal</a><span class="shortcut">spacebar</span></div>
+          <div id="deal">
+			<a href="#" onclick="App.deal();">Deal</a>
+			<span class="shortcut">spacebar</span>
+		  </div>
           <ul id="actions">
             <li><a href="#" onclick="App.hit();">Hit</a><span class="shortcut">spacebar</span></li>
             <li><a href="#" onclick="App.stand();">Stand</a><span class="shortcut">s</span></li>

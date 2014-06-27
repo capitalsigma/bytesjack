@@ -3,8 +3,8 @@
 
 // DRL Extras
   #view-chart {
-    height: 30%;
-    width: auto;
+    height: auto;
+    width: 20%;
 
     #chart {
       position: absolute;
@@ -23,6 +23,14 @@
   }
 
 
+
+    .no-box *,
+    .no-box *:before,
+    .no-box *:after {
+    -webkit-box-sizing: content-box !important;
+    -moz-box-sizing: content-box !important;
+    box-sizing: content-box !important;
+    }
 
 // Utils ----------------------------------------------
 * { margin: 0; padding: 0; }
@@ -108,6 +116,10 @@ body, html { width: 100%; height: 100%;
       text-align: center;
     }
 
+      /* #deal *,*/
+
+
+
     #deal, #actions {
       width: 50%;
       height: 100%;
@@ -128,9 +140,8 @@ body, html { width: 100%; height: 100%;
           @include box-shadow(#{
               inset 0px 2px 0 rgba(255,255,255,$alpha),
               inset 0px -2px 0 rgba(255,255,255,0.1),
-              //inset 0px -2px 0 rgba(255,255,255,$alpha),
               0px 5px 0px 0px #daa206,
-              0px 5px 0px 2px rgba(0,0,0,1)});
+              0px 5px 0px 2px rgba(0,0,0,.1)});
           @include rounded(12px);
           @include transition(#{box-shadow 150ms ease-out});
 
