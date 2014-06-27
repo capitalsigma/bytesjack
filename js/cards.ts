@@ -54,7 +54,7 @@ module Cards {
 
 		sum() {
 			var nonAce = this.values.sum();
-			return nonAce + (this.hasAce && nonAce <= 10 ? 10 : 0);
+			return nonAce + (this.hasAce && nonAce <= 11 ? 10 : 0);
 		}
 
 		lastCard() {
@@ -242,6 +242,11 @@ module Cards {
 
 		index() {
 			return this.container.index();
+		}
+
+		toJSON() {				// hack
+			this.container = null;
+			return this;
 		}
 	}
 }
