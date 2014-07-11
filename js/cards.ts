@@ -146,6 +146,7 @@ module Cards {
 
 		constructor() {
 			super();
+			this.cardsDealt = {};
 		}
 
 		private generateRandom() {
@@ -164,7 +165,7 @@ module Cards {
 			};
 		}
 
-		getCardAtIndex(index) {
+		getCardAtIndex(index:number) {
 			if (index in this.cardsDealt) {
 				return this.cardsDealt[index];
 			} else {

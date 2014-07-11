@@ -132,6 +132,7 @@ var Cards;
         __extends(RandomCardCollection, _super);
         function RandomCardCollection() {
             _super.call(this);
+            this.cardsDealt = {};
         }
         RandomCardCollection.prototype.generateRandom = function () {
             return this.generateRandomFromCard(Math.floor(Math.random() * (12)) + 1);
@@ -759,7 +760,7 @@ var App = (function () {
         // hands count from zero
         this.deckManager = new Context.DeckManager({
             "default": function () {
-                return new Cards.RealisticDeck();
+                return new Cards.RandomRiggedDeck({});
             },
             "4": function () {
                 return new Cards.RandomRiggedDeck({
