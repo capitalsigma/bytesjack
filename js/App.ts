@@ -56,8 +56,8 @@ class App {
 								this.isSafari, $('#bankroll'));
 	// hands count from zero
 	deckManager = new Context.DeckManager({
-		"default": () => { return new Cards.RealisticDeck(); },
-		"4": () => { return new Cards.RiggedDeck({
+		"default": () => { return new Cards.RandomRiggedDeck({}); },
+		"4": () => { return new Cards.RandomRiggedDeck({
 			"0": 10,
 			"1": 7,
 			"2": 6,

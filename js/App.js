@@ -61,15 +61,35 @@ var Cards;
     })();
     Cards.Hand = Hand;
 
-    var AbstractDeck = (function () {
-        function AbstractDeck() {
+    var AbstractCardCollection = (function () {
+        function AbstractCardCollection() {
             this.types = ['clubs', 'diamonds', 'hearts', 'spades'];
+        }
+        AbstractCardCollection.prototype.getCardAtIndex = function (index) {
+            throw new Error("This method is abstract.");
+        };
+
+        AbstractCardCollection.prototype.getCardWithValue = function (value) {
+            throw new Error("This method is abstract.");
+        };
+
+        AbstractCardCollection.prototype.clampAtTen = function (value) {
+            return value > 10 ? 10 : value;
+        };
+        return AbstractCardCollection;
+    })();
+    Cards.AbstractCardCollection = AbstractCardCollection;
+
+    var RealisticCardCollection = (function (_super) {
+        __extends(RealisticCardCollection, _super);
+        function RealisticCardCollection() {
+            _super.call(this);
             this.cards = [];
             this.currentIndex = -1;
 
             for (var i = 0; i < this.types.length; i++) {
                 for (var j = 1; j <= 13; j++) {
-                    var value = (j > 10) ? 10 : j;
+                    var value = this.clampAtTen(j);
                     this.cards.push({
                         card: j,
                         value: value,
@@ -81,7 +101,7 @@ var Cards;
 
             this.shuffle();
         }
-        AbstractDeck.prototype.shuffle = function () {
+        RealisticCardCollection.prototype.shuffle = function () {
             for (var j, x, i = this.cards.length; i; j = Math.floor(Math.random() * i)) {
                 x = this.cards[--i];
                 this.cards[i] = this.cards[j];
@@ -89,11 +109,11 @@ var Cards;
             }
         };
 
-        AbstractDeck.prototype.getCurrent = function () {
-            throw new Error("This method is abstract.");
+        RealisticCardCollection.prototype.getCardAtIndex = function (index) {
+            return this.cards[index];
         };
 
-        AbstractDeck.prototype.getCardWithValue = function (value) {
+        RealisticCardCollection.prototype.getCardWithValue = function (value) {
             for (var i = 0; i < this.cards.length; i++) {
                 if (this.cards[i].value === value) {
                     var ret = this.cards[i];
@@ -104,6 +124,60 @@ var Cards;
             }
             throw new Error("Should never see this");
         };
+        return RealisticCardCollection;
+    })(AbstractCardCollection);
+    Cards.RealisticCardCollection = RealisticCardCollection;
+
+    var RandomCardCollection = (function (_super) {
+        __extends(RandomCardCollection, _super);
+        function RandomCardCollection() {
+            _super.call(this);
+            this.cardsDealt = {};
+        }
+        RandomCardCollection.prototype.generateRandom = function () {
+            return this.generateRandomFromCard(Math.floor(Math.random() * (12)) + 1);
+        };
+
+        RandomCardCollection.prototype.generateRandomFromCard = function (card) {
+            var value = this.clampAtTen(card), type = this.types[Math.floor(Math.random() * 3)];
+
+            return {
+                card: card,
+                value: value,
+                type: type
+            };
+        };
+
+        RandomCardCollection.prototype.getCardAtIndex = function (index) {
+            if (index in this.cardsDealt) {
+                return this.cardsDealt[index];
+            } else {
+                var newCard = this.generateRandom();
+                this.cardsDealt[index] = newCard;
+                return newCard;
+            }
+        };
+
+        RandomCardCollection.prototype.getCardWithValue = function (value) {
+            return this.generateRandomFromCard(value);
+        };
+        return RandomCardCollection;
+    })(AbstractCardCollection);
+    Cards.RandomCardCollection = RandomCardCollection;
+
+    var AbstractDeck = (function () {
+        function AbstractDeck() {
+            this.currentIndex = 0;
+            // this.cards = cardCollection;
+            // throw new Error("This method is abstract.");
+        }
+        AbstractDeck.prototype.getCurrent = function () {
+            throw new Error("This method is abstract.");
+        };
+
+        AbstractDeck.prototype.dealNew = function () {
+            throw new Error("This method is abstract.");
+        };
         return AbstractDeck;
     })();
     Cards.AbstractDeck = AbstractDeck;
@@ -111,7 +185,8 @@ var Cards;
     var RealisticDeck = (function (_super) {
         __extends(RealisticDeck, _super);
         function RealisticDeck() {
-            _super.apply(this, arguments);
+            _super.call(this);
+            this.cards = new RealisticCardCollection();
         }
         RealisticDeck.prototype.getCurrent = function () {
             return this.cards[this.currentIndex];
@@ -124,33 +199,34 @@ var Cards;
     })(AbstractDeck);
     Cards.RealisticDeck = RealisticDeck;
 
-    var RiggedDeck = (function (_super) {
-        __extends(RiggedDeck, _super);
-        function RiggedDeck(riggedMap) {
+    var RandomRiggedDeck = (function (_super) {
+        __extends(RandomRiggedDeck, _super);
+        function RandomRiggedDeck(riggedMap) {
             _super.call(this);
             this.riggedMap = riggedMap;
             this.currentCard = null;
+            this.cards = new RandomCardCollection();
         }
-        RiggedDeck.prototype.setRigged = function (index) {
+        RandomRiggedDeck.prototype.setRigged = function (index) {
             if (index in this.riggedMap) {
-                this.currentCard = this.getCardWithValue(this.riggedMap[index]);
+                this.currentCard = this.cards.getCardWithValue(this.riggedMap[index]);
             } else {
-                this.currentCard = this.cards[index];
+                this.currentCard = this.cards.getCardAtIndex(index);
             }
         };
 
-        RiggedDeck.prototype.getCurrent = function () {
+        RandomRiggedDeck.prototype.getCurrent = function () {
             return this.currentCard;
         };
 
-        RiggedDeck.prototype.dealNew = function () {
+        RandomRiggedDeck.prototype.dealNew = function () {
             this.setRigged(++this.currentIndex);
 
             return this.currentCard;
         };
-        return RiggedDeck;
+        return RandomRiggedDeck;
     })(AbstractDeck);
-    Cards.RiggedDeck = RiggedDeck;
+    Cards.RandomRiggedDeck = RandomRiggedDeck;
 
     var Card = (function () {
         function Card(type, value, side, id) {
@@ -684,10 +760,10 @@ var App = (function () {
         // hands count from zero
         this.deckManager = new Context.DeckManager({
             "default": function () {
-                return new Cards.RealisticDeck();
+                return new Cards.RandomRiggedDeck({});
             },
             "4": function () {
-                return new Cards.RiggedDeck({
+                return new Cards.RandomRiggedDeck({
                     "0": 10,
                     "1": 7,
                     "2": 6
