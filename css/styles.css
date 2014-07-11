@@ -180,7 +180,7 @@ body, html {
         #game #ui .zone #deal li, #game #ui .zone #actions li {
           display: block;
           width: 29.4%;
-          margin: 0 1%;
+          margin: 0 10%;
           float: left; }
           #game #ui .zone #deal li a, #game #ui .zone #actions li a {
             padding: 22% 5% 20% 5%;
