@@ -208,6 +208,8 @@ var Cards;
             this.cards = new RandomCardCollection();
         }
         RandomRiggedDeck.prototype.setRigged = function (index) {
+            console.log("generating rigged card for index " + index);
+            console.log("value will be: " + this.riggedMap[String(index)]);
             if (index in this.riggedMap) {
                 this.currentCard = this.cards.getCardWithValue(this.riggedMap[index]);
             } else {
@@ -764,9 +766,9 @@ var App = (function () {
             },
             "4": function () {
                 return new Cards.RandomRiggedDeck({
-                    "0": 10,
-                    "1": 7,
-                    "2": 6
+                    "1": 10,
+                    "2": 7,
+                    "3": 6
                 });
             } });
         this.state = new Context.StateManager(this.MAX_TURNS, $('#left-text'), this.deckManager);

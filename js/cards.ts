@@ -224,6 +224,8 @@ module Cards {
 		}
 
 		private setRigged(index) {
+			console.log("generating rigged card for index " + index);
+			console.log("value will be: " + this.riggedMap[String(index)]);
 			if (index in this.riggedMap) {
 				this.currentCard = this.cards.getCardWithValue(this.riggedMap[index]);
 			} else {

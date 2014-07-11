@@ -58,9 +58,9 @@ class App {
 	deckManager = new Context.DeckManager({
 		"default": () => { return new Cards.RandomRiggedDeck({}); },
 		"4": () => { return new Cards.RandomRiggedDeck({
-			"0": 10,
-			"1": 7,
-			"2": 6,
+			"1": 10,
+			"2": 7,
+			"3": 6,
 			// "3": 1
 		}); }});
 
